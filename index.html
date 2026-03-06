@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="AI 기반 사주팔자 분석. 만세력 자동 계산, 운세, 궁합까지."/>
+  <title>오늘의 사주 — AI 사주팔자 분석</title>
+
+  <!-- ✅ 1단계: ca-pub-XXXXXXXXXXXXXXXX 를 본인 AdSense ID로 교체 -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0c0c0f; }
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+    @keyframes spinlogo { to { transform: rotate(360deg); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    input::-webkit-inner-spin-button,
+    input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0c0c0f; }
+    ::-webkit-scrollbar-thumb { background: #2a2a35; border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+// ── 만세력 상수 ──
+const SKY      = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const EARTH    = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const SKY_KO   = ['갑','을','병','정','무','기','경','신','임','계'];
+const ZODIAC   = ['쥐','소','호랑이','토끼','용','뱀','말','양','원숭이','닭','개','돼지'];
+const SKY_ELEM = ['木','木','火','火','土','土','金','金','水','水'];
+const EARTH_ELEM=['水','土','木','木','土','火','火','土','金','金','土','水'];
+const ELEM_KO  = {'木':'목','火':'화','土':'토','金':'금','水':'수'};
+const ELEM_COLOR= {'木':'#6dba8a','火':'#e07a65','土':'#FFAE00','金':'#a8a8c0','水':'#6a9fd4'};
+const ELEM_BG  = {'木':'rgba(74,143,100,0.14)','火':'rgba(196,91,74,0.14)','土':'rgba(255,174,0,0.12)','金':'rgba(180,180,200,0.1)','水':'rgba(74,127,196,0.14)'};
+const ELEM_BD  = {'木':'rgba(74,143,100,0.22)','火':'rgba(196,91,74,0.22)','土':'rgba(255,174,0,0.22)','金':'rgba(180,180,200,0.18)','水':'rgba(74,127,196,0.22)'};
+
+// ── 만세력 계산 ──
+function yearPillar(y) {
+  const si=((y-4)%10+10)%10, ei=((y-4)%12+12)%12;
+  return {sky:SKY[si],earth:EARTH[ei],si,ei};
+}
+function monthPillar(y,m) {
+  const ei=(m+1)%12, ySi=((y-4)%10+10)%10;
+  const base=[2,4,6,8,0][ySi%5], si=(base+(m-1))%10;
+  return {sky:SKY[si],earth:EARTH[ei],si,ei};
+}
+function dayPillar(y,m,d) {
+  const a=Math.floor((14-m)/12),yr=y+4800-a,mo=m+12*a-3;
+  const jdn=d+Math.floor((153*mo+2)/5)+365*yr+Math.floor(yr/4)-Math.floor(yr/100)+Math.floor(yr/400)-32045;
+  const diff=jdn-2415021;
+  const si=((diff%10)+10)%10, ei=((diff%12)+12)%12;
+  return {sky:SKY[si],earth:EARTH[ei],si,ei};
+}
+function hourPillar(hour,daySi) {
+  if(hour===null||hour===''||hour===undefined) return {sky:'–',earth:'–',si:-1,ei:-1};
+  const h=parseInt(hour), ei=Math.floor(((h+1)%24)/2);
+  const base=[0,2,4,6,8][daySi%5], si=(base+ei)%10;
+  return {sky:SKY[si],earth:EARTH[ei],si,ei};
+}
+function calcDaewun(yp,mp,gender) {
+  const isYang=yp.si%2===0, fwd=(isYang&&gender==='male')||(!isYang&&gender==='female');
+  let ms=mp.si, me=mp.ei;
+  return Array.from({length:8},(_,i)=>{
+    ms=fwd?(ms+1)%10:(ms-1+10)%10;
+    me=fwd?(me+1)%12:(me-1+12)%12;
+    return {sky:SKY[ms],earth:EARTH[me],age:i*10+3};
+  });
+}
+function computeSaju(y,m,d,hour,gender) {
+  const yp=yearPillar(y),mp=monthPillar(y,m),dp=dayPillar(y,m,d),hp=hourPillar(hour,dp.si);
+  const pillars=[{name:'년주',...yp},{name:'월주',...mp},{name:'일주',...dp},{name:'시주',...hp}];
+  const cnt={'木':0,'火':0,'土':0,'金':0,'水':0};
+  pillars.forEach(p=>{
+    if(p.si>=0) cnt[SKY_ELEM[p.si]]++;
+    if(p.ei>=0) cnt[EARTH_ELEM[p.ei]]++;
+  });
+  return {pillars,cnt,dayElem:dp.si>=0?SKY_ELEM[dp.si]:'土',dw:calcDaewun(yp,mp,gender),zodiac:ZODIAC[yp.ei],yp,mp,dp};
+}
+
+// ── API 호출 (Netlify Function 경유) ──
+async function callClaude(prompt) {
+  const res = await fetch("/.netlify/functions/claude", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  const raw = (data.content || "").replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  const start = raw.indexOf('{'), end = raw.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error("응답 파싱 실패: " + raw.slice(0,100));
+  return JSON.parse(raw.slice(start, end+1));
+}
+
+// ── 스타일 상수 ──
+const C = {
+  bg:'#0c0c0f', surface:'#141418', surface2:'#1c1c22', border:'#2a2a35',
+  primary:'#FFAE00', primaryLight:'#ffc940', text:'#f0ede8',
+  textMuted:'#7a7880', textDim:'#4a4858',
+};
+
+const s = {
+  app:{ maxWidth:680, margin:'0 auto', padding:'0 20px 80px', fontFamily:'Pretendard,-apple-system,sans-serif', color:C.text, WebkitFontSmoothing:'antialiased' },
+  header:{ textAlign:'center', padding:'48px 0 32px' },
+  logoSymbol:{ width:40,height:40,border:`1.5px solid ${C.primary}`,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:C.primary,margin:'0 auto 14px',animation:'spin 25s linear infinite' },
+  logoTitle:{ fontSize:22,fontWeight:700,letterSpacing:'0.04em',color:C.text },
+  logoSub:{ fontSize:11,letterSpacing:'0.28em',color:C.textMuted,marginTop:5,fontWeight:300 },
+  tabs:{ display:'flex',background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:4,marginBottom:28,gap:2 },
+  tab:(a)=>({ flex:1,padding:'10px 0',border:a?`1px solid ${C.border}`:'none',background:a?C.surface2:'transparent',color:a?C.primary:C.textMuted,fontFamily:'Pretendard,sans-serif',fontSize:13,fontWeight:500,cursor:'pointer',borderRadius:9,transition:'all 0.2s',letterSpacing:'0.02em' }),
+  card:{ background:C.surface,border:`1px solid ${C.border}`,borderRadius:16,padding:24,marginBottom:14 },
+  cardLabel:{ fontSize:10,fontWeight:600,letterSpacing:'0.25em',color:C.textMuted,textTransform:'uppercase',marginBottom:18 },
+  formRow:{ display:'grid',gridTemplateColumns:'2fr 1fr 1fr',gap:10,marginBottom:10 },
+  formRow2:{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16 },
+  formGroup:{ display:'flex',flexDirection:'column',gap:5 },
+  label:{ fontSize:11,fontWeight:500,color:C.textMuted,letterSpacing:'0.05em' },
+  input:{ background:C.surface2,border:`1px solid ${C.border}`,borderRadius:8,padding:'10px 12px',color:C.text,fontFamily:'Pretendard,sans-serif',fontSize:14,fontWeight:400,outline:'none',width:'100%' },
+  genderRow:{ display:'flex',gap:8,marginBottom:18 },
+  genderBtn:(a)=>({ flex:1,padding:9,background:a?'rgba(255,174,0,0.08)':C.surface2,border:`1px solid ${a?C.primary:C.border}`,borderRadius:8,color:a?C.primary:C.textMuted,fontFamily:'Pretendard,sans-serif',fontSize:13,fontWeight:500,cursor:'pointer',transition:'all 0.2s' }),
+  mainBtn:{ width:'100%',padding:14,background:C.primary,border:'none',borderRadius:10,color:'#0c0c0f',fontFamily:'Pretendard,sans-serif',fontSize:14,fontWeight:700,letterSpacing:'0.04em',cursor:'pointer' },
+  errBox:{ padding:'13px 16px',background:'rgba(196,91,74,0.1)',border:'1px solid rgba(196,91,74,0.25)',borderRadius:10,color:'#e07a65',fontSize:13,marginBottom:14 },
+  loadBox:{ textAlign:'center',padding:'52px 0' },
+  pillars:{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:14 },
+  pillar:{ background:C.surface2,border:`1px solid ${C.border}`,borderRadius:12,padding:'14px 8px',textAlign:'center' },
+  pillarName:{ fontSize:10,letterSpacing:'0.18em',color:C.textDim,marginBottom:10,fontWeight:500 },
+  pillarSky:{ fontSize:26,color:C.primary,lineHeight:1,marginBottom:6,fontWeight:300 },
+  pillarEarth:{ fontSize:22,color:C.textMuted,lineHeight:1,fontWeight:300 },
+  pillarElem:{ fontSize:10,color:C.textDim,marginTop:8,fontWeight:400 },
+  elemRow:{ display:'flex',flexWrap:'wrap',gap:6,marginBottom:14 },
+  secHead:{ display:'flex',alignItems:'center',gap:8,marginBottom:10 },
+  secDot:{ width:5,height:5,background:C.primary,borderRadius:'50%',flexShrink:0 },
+  secTitle:{ fontSize:11,fontWeight:600,letterSpacing:'0.2em',color:C.primary,textTransform:'uppercase' },
+  bodyText:{ fontSize:14,fontWeight:300,lineHeight:2,color:'#c5c2bc',wordBreak:'keep-all' },
+  divider:{ height:1,background:C.border,margin:'18px 0' },
+  scoreBlock:{ display:'flex',alignItems:'center',gap:18,padding:18,background:C.surface2,borderRadius:12,marginBottom:18 },
+  scoreBig:{ fontSize:52,fontWeight:700,color:C.primary,lineHeight:1,minWidth:68 },
+  scoreBar:{ height:4,background:C.border,borderRadius:2,overflow:'hidden',margin:'7px 0 5px' },
+  scoreFill:(pct)=>({ height:'100%',background:`linear-gradient(90deg,${C.primary},${C.primaryLight})`,borderRadius:2,width:`${pct}%`,transition:'width 1.2s ease' }),
+  fItem:{ display:'flex',gap:12,marginBottom:14,alignItems:'flex-start' },
+  fIcon:{ width:34,height:34,borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,flexShrink:0,background:C.surface2,border:`1px solid ${C.border}` },
+  periodTabs:{ display:'flex',gap:7,marginBottom:18 },
+  ptab:(a)=>({ padding:'6px 14px',background:a?'rgba(255,174,0,0.08)':'transparent',border:`1px solid ${a?C.primary:C.border}`,borderRadius:100,color:a?C.primary:C.textMuted,fontFamily:'Pretendard,sans-serif',fontSize:12,fontWeight:500,cursor:'pointer' }),
+  daewunGrid:{ display:'grid',gridTemplateColumns:'repeat(8,1fr)',gap:5,marginTop:10 },
+  dwCell:{ background:C.surface2,border:`1px solid ${C.border}`,borderRadius:8,padding:'8px 4px',textAlign:'center' },
+  mansBadge:{ display:'inline-flex',alignItems:'center',gap:6,padding:'4px 10px',background:'rgba(90,171,122,0.1)',border:'1px solid rgba(90,171,122,0.25)',borderRadius:100,fontSize:11,color:'#5aab7a',fontWeight:500,marginBottom:16 },
+  compatPair:{ display:'flex',alignItems:'center',justifyContent:'center',gap:24,padding:'20px 0 24px' },
+  compatGrid:{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:10 },
+};
+
+// ── 공통 컴포넌트 ──
+const Spinner = () => (
+  <div style={s.loadBox}>
+    <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes sspin{to{transform:rotate(360deg)}}`}</style>
+    <div style={{width:44,height:44,border:`2px solid ${C.border}`,borderTopColor:C.primary,borderRadius:'50%',margin:'0 auto 14px',animation:'spin 0.9s linear infinite'}} />
+    <div style={{color:C.textMuted,fontSize:13,letterSpacing:'0.08em',fontWeight:300}}>분석 중입니다...</div>
+  </div>
+);
+
+const Sec = ({title, text}) => (
+  <div style={s.secHead.paddingBottom?{}:{marginBottom:20}}>
+    <div style={s.secHead}><div style={s.secDot}/><div style={s.secTitle}>{title}</div></div>
+    <p style={s.bodyText}>{text}</p>
+  </div>
+);
+
+const FItem = ({icon, label, text}) => (
+  <div style={s.fItem}>
+    <div style={s.fIcon}>{icon}</div>
+    <div><div style={{fontSize:11,color:C.textMuted,marginBottom:3,fontWeight:500,letterSpacing:'0.05em'}}>{label}</div><p style={{fontSize:13,color:C.text,lineHeight:1.8,fontWeight:300,wordBreak:'keep-all'}}>{text}</p></div>
+  </div>
+);
+
+const Divider = () => <div style={s.divider}/>;
+
+// ── Google AdSense 광고 컴포넌트 ──
+// 배포 후 YOUR_ADSENSE_CLIENT, YOUR_AD_SLOT_ID 를 실제 값으로 교체하세요
+const ADSENSE_CLIENT = 'ca-pub-XXXXXXXXXXXXXXXX'; // ← 본인 AdSense 퍼블리셔 ID
+const AD_SLOT_INLINE = 'XXXXXXXXXX';              // ← 인라인 광고 슬롯 ID
+const AD_SLOT_BOTTOM = 'XXXXXXXXXX';              // ← 하단 고정 광고 슬롯 ID
+
+const AdBanner = ({ slot, style: extraStyle = {} }) => {
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    try {
+      if (ref.current && window.adsbygoogle) {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      }
+    } catch(e) {}
+  }, []);
+  return (
+    <div style={{textAlign:'center', overflow:'hidden', ...extraStyle}}>
+      <ins
+        ref={ref}
+        className="adsbygoogle"
+        style={{display:'block'}}
+        data-ad-client={ADSENSE_CLIENT}
+        data-ad-slot={slot}
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      />
+    </div>
+  );
+};
+
+// 하단 고정 광고 배너
+const BottomAdBar = () => (
+  <div style={{
+    position:'fixed', bottom:0, left:0, right:0, zIndex:999,
+    background:C.surface, borderTop:`1px solid ${C.border}`,
+    padding:'6px 0', textAlign:'center',
+    height:70,  // 고정 높이로 본문 패딩 계산 기준 확보
+  }}>
+    <div style={{fontSize:9,color:C.textDim,letterSpacing:'0.1em',marginBottom:3}}>광고</div>
+    <AdBanner slot={AD_SLOT_BOTTOM} style={{maxWidth:680,margin:'0 auto'}}/>
+  </div>
+);
+const NumInput = ({id, ph}) => (
+  <input
+    id={id}
+    type="text"
+    inputMode="numeric"
+    placeholder={ph}
+    style={s.input}
+    onFocus={e => e.target.style.borderColor = C.primary}
+    onBlur={e => {
+      e.target.style.borderColor = C.border;
+      e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    }}
+  />
+);
+
+// ── 사주 입력 폼 ──
+const SajuForm = ({onResult}) => {
+  const [gender, setGender] = useState('female');
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const submit = async () => {
+    setErr('');
+    const y = parseInt(document.getElementById('s-year')?.value||'');
+    const m = parseInt(document.getElementById('s-month')?.value||'');
+    const d = parseInt(document.getElementById('s-day')?.value||'');
+    const hourVal = document.getElementById('s-hour')?.value?.trim();
+    const hour = hourVal ? parseInt(hourVal) : null;
+    const nm = document.getElementById('s-name')?.value?.trim() || '의뢰인';
+
+    if(!y||!m||!d||m<1||m>12||d<1||d>31){setErr('년, 월, 일을 올바르게 입력해주세요.');return;}
+    setLoading(true);
+    try {
+      const sj=computeSaju(y,m,d,hour,gender);
+      const gTxt=gender==='male'?'남성':'여성';
+      const elemTxt=Object.entries(sj.cnt).map(([k,v])=>`${ELEM_KO[k]} ${v}개`).join(', ');
+      const dwTxt=sj.dw.map(dw=>`${dw.age}세:${dw.sky}${dw.earth}`).join(' / ');
+      const yp=sj.pillars[0],mp=sj.pillars[1],dp=sj.pillars[2],hp=sj.pillars[3];
+
+      const data = await callClaude(`당신은 30년 경력의 한국 전통 사주명리학 전문가입니다. 아래 만세력 사주를 바탕으로 깊고 통찰력 있는 심층 분석을 해주세요.
+중요: 응답은 반드시 한글로만 작성하세요. 한자는 사주팔자 기둥(甲子 등)을 제외하고 절대 사용하지 마세요. 전문용어도 쉬운 한글로 풀어서 설명해주세요.
+
+【의뢰인】 ${nm} (${gTxt}) · ${y}년 ${m}월 ${d}일${hour!==null?' '+hour+'시':''}
+【사주팔자】 년주:${yp.sky}${yp.earth} / 월주:${mp.sky}${mp.earth} / 일주:${dp.sky}${dp.earth} / 시주:${hour!==null?hp.sky+hp.earth:'미상'}
+일간: ${dp.sky}(${SKY_KO[dp.si]}일간) · 오행분포: ${elemTxt} · 대운: ${dwTxt} · 띠: ${sj.zodiac}띠
+
+다음 JSON으로만 응답하세요:
+{
+  "destiny_line": "이 사람의 운명을 단 한 문장으로 — 극적이고 시적으로, 마치 소설 첫 줄처럼",
+  "keywords": ["핵심 키워드 3개, 각 2~4글자"],
+  "today_word": "오늘 이 사람에게 전하는 짧고 강렬한 한 마디, 15자 이내",
+  "personality": "성격·기질 심층분석 7~9문장",
+  "talent": "재능·직업적성 5~6문장",
+  "wealth": "재물운 5~6문장",
+  "love": "애정·결혼운 6~7문장",
+  "health": "건강운 4~5문장",
+  "daewun": "대운 흐름 5~6문장",
+  "caution": "주의사항 4~5문장",
+  "yongshin": "이 사주에 필요한 에너지를 쉬운 말로 4~5문장",
+  "lucky_color": "행운색 2~3가지와 이유",
+  "lucky_number": "행운숫자 2~3가지와 이유",
+  "lucky_direction": "행운방향과 이유",
+  "compat_best": "잘맞는 띠 2~3가지와 이유",
+  "compat_avoid": "주의할 띠 2가지와 이유",
+  "summary": "종합총평 6~8문장"
+}`);
+      onResult({saju:sj, data, year:y, month:m, day:d, hour, gender, name:nm});
+    } catch(e){ setErr(e.message); }
+    setLoading(false);
+  };
+
+  if(loading) return <Spinner/>;
+
+  return (
+    <div style={s.card}>
+      <div style={s.cardLabel}>생년월일시 입력</div>
+      <div style={s.formRow}>
+        <div style={s.formGroup}><label style={s.label}>년도</label><NumInput id="s-year" ph="예) 1990"/></div>
+        <div style={s.formGroup}><label style={s.label}>월 (1–12)</label><NumInput id="s-month" ph="월"/></div>
+        <div style={s.formGroup}><label style={s.label}>일 (1–31)</label><NumInput id="s-day" ph="일"/></div>
+      </div>
+      <div style={s.formRow2}>
+        <div style={s.formGroup}><label style={s.label}>시간 (0–23, 비워도 됩니다)</label><NumInput id="s-hour" ph="시"/></div>
+        <div style={s.formGroup}><label style={s.label}>이름 (선택)</label>
+          <input id="s-name" type="text" placeholder="홍길동" style={s.input}
+            onFocus={e=>e.target.style.borderColor=C.primary}
+            onBlur={e=>e.target.style.borderColor=C.border}/>
+        </div>
+      </div>
+      <div style={s.genderRow}>
+        <button style={s.genderBtn(gender==='male')} onClick={()=>setGender('male')}>남성</button>
+        <button style={s.genderBtn(gender==='female')} onClick={()=>setGender('female')}>여성</button>
+      </div>
+      {err && <div style={{...s.errBox,marginBottom:14}}>{err}</div>}
+      <button style={s.mainBtn} onClick={submit}>사주 분석하기</button>
+    </div>
+  );
+};
+
+// ── 사주 결과 ──
+const SajuResult = ({result, onReset}) => {
+  const {saju:sj, data:d} = result;
+  return (
+    <div>
+      {/* ── 킥 카드 ── */}
+      <div style={{
+        background:`linear-gradient(135deg, #1a1508 0%, #0f0f12 60%, #0c1018 100%)`,
+        border:`1px solid rgba(255,174,0,0.2)`,
+        borderRadius:16, padding:'28px 24px', marginBottom:14, position:'relative', overflow:'hidden'
+      }}>
+        {/* 배경 글로우 */}
+        <div style={{position:'absolute',top:-40,right:-40,width:160,height:160,background:'rgba(255,174,0,0.06)',borderRadius:'50%',filter:'blur(40px)',pointerEvents:'none'}}/>
+        {/* 운명 한 줄 */}
+        <div style={{fontSize:11,fontWeight:600,letterSpacing:'0.2em',color:'rgba(255,174,0,0.5)',marginBottom:12,textTransform:'uppercase'}}>운명의 한 줄</div>
+        <div style={{fontSize:17,fontWeight:500,lineHeight:1.7,color:C.text,marginBottom:22,letterSpacing:'-0.01em',wordBreak:'keep-all'}}>
+          "{d.destiny_line}"
+        </div>
+        {/* 키워드 3개 */}
+        <div style={{display:'flex',gap:8,marginBottom:22,flexWrap:'wrap'}}>
+          {(d.keywords||[]).map((kw,i)=>(
+            <span key={i} style={{
+              padding:'6px 14px',
+              background: i===0?'rgba(255,174,0,0.12)': i===1?'rgba(255,174,0,0.07)':'rgba(255,174,0,0.04)',
+              border:`1px solid rgba(255,174,0,${i===0?0.35:i===1?0.2:0.12})`,
+              borderRadius:100, fontSize:13, fontWeight:600,
+              color: i===0?C.primary:`rgba(255,174,0,${i===1?0.75:0.5})`,
+              letterSpacing:'0.04em'
+            }}>#{kw}</span>
+          ))}
+        </div>
+        {/* 오늘의 한마디 */}
+        <div style={{borderTop:'1px solid rgba(255,174,0,0.1)',paddingTop:16,display:'flex',alignItems:'flex-start',gap:10}}>
+          <span style={{fontSize:16,lineHeight:1}}>✦</span>
+          <div>
+            <div style={{fontSize:10,letterSpacing:'0.18em',color:'rgba(255,174,0,0.4)',marginBottom:4,fontWeight:500}}>오늘의 한마디</div>
+            <div style={{fontSize:14,color:'rgba(240,237,232,0.8)',fontWeight:400,lineHeight:1.6}}>{d.today_word}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 사주팔자 카드 ── */}
+      <div style={s.card}>
+        <div style={s.mansBadge}><div style={{width:5,height:5,background:'#5aab7a',borderRadius:'50%'}}/> 만세력 자동 계산 완료</div>
+        <div style={s.cardLabel}>사주팔자</div>
+        <div style={s.pillars}>
+          {sj.pillars.map(p=>(
+            <div key={p.name} style={s.pillar}>
+              <div style={s.pillarName}>{p.name}</div>
+              <div style={s.pillarSky}>{p.sky}</div>
+              <div style={s.pillarEarth}>{p.earth}</div>
+              <div style={s.pillarElem}>{p.si>=0?SKY_ELEM[p.si]:''}</div>
+            </div>
+          ))}
+        </div>
+        <div style={s.elemRow}>
+          {Object.entries(sj.cnt).filter(([,v])=>v>0).map(([k,v])=>(
+            <span key={k} style={{padding:'4px 11px',borderRadius:100,fontSize:12,fontWeight:500,background:ELEM_BG[k],color:ELEM_COLOR[k],border:`1px solid ${ELEM_BD[k]}`}}>{ELEM_KO[k]} {v}</span>
+          ))}
+        </div>
+        <div style={{fontSize:12,color:C.textMuted}}>
+          일간 <span style={{color:C.primary,fontWeight:600}}>{sj.pillars[2].sky}</span> ·
+          오행 <span style={{color:C.primary,fontWeight:600}}>{ELEM_KO[sj.dayElem]}</span> ·
+          띠 <span style={{color:C.primary,fontWeight:600}}>{sj.zodiac}띠</span>
+        </div>
+      </div>
+
+      {/* ── 대운표 ── */}
+      <div style={s.card}>
+        <div style={s.secHead}><div style={s.secDot}/><div style={s.secTitle}>대운표</div></div>
+        <div style={{fontSize:12,color:C.textMuted,marginBottom:10}}>10년 단위 대운의 흐름</div>
+        <div style={s.daewunGrid}>
+          {sj.dw.map((dw,i)=>(
+            <div key={i} style={s.dwCell}>
+              <div style={{fontSize:9,color:C.textDim,marginBottom:3,fontWeight:500}}>{dw.age}세~</div>
+              <div style={{fontSize:15,color:C.primary,fontWeight:300,lineHeight:1}}>{dw.sky}</div>
+              <div style={{fontSize:13,color:C.textMuted,fontWeight:300,lineHeight:1,marginTop:2}}>{dw.earth}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 심층 분석 (순서: 성격 → 재능 → 재물 → 애정 → 건강 → 대운 → 주의 → 에너지) ── */}
+      <div style={s.card}>
+        {[
+          ['성격과 기질', d.personality],
+          ['재능과 직업', d.talent],
+          ['재물운', d.wealth],
+          ['애정과 결혼운', d.love],
+          ['건강운', d.health],
+          ['대운 해석', d.daewun],
+          ['주의사항', d.caution],
+          ['이 사주에 필요한 에너지', d.yongshin],
+        ].map(([t,v],i)=>(
+          <div key={t}>{i>0&&<Divider/>}<div style={{marginBottom:20}}><div style={s.secHead}><div style={s.secDot}/><div style={s.secTitle}>{t}</div></div><p style={s.bodyText}>{v}</p></div></div>
+        ))}
+      </div>
+
+      {/* ── 행운 정보 ── */}
+      <div style={s.card}>
+        <div style={s.cardLabel}>행운 정보</div>
+        <FItem icon="🎨" label="행운의 색" text={d.lucky_color}/>
+        <FItem icon="🔢" label="행운의 숫자" text={d.lucky_number}/>
+        <FItem icon="🧭" label="행운의 방향" text={d.lucky_direction}/>
+        <Divider/>
+        <div style={s.compatGrid}>
+          <div style={{padding:14,borderRadius:10,background:'rgba(109,186,138,0.07)',border:'1px solid rgba(109,186,138,0.18)'}}>
+            <div style={{fontSize:10,letterSpacing:'0.2em',marginBottom:7,fontWeight:600,color:'#6dba8a'}}>잘 맞는 띠</div>
+            <div style={{fontSize:13,lineHeight:1.8,fontWeight:300,wordBreak:'keep-all'}}>{d.compat_best}</div>
+          </div>
+          <div style={{padding:14,borderRadius:10,background:'rgba(196,91,74,0.07)',border:'1px solid rgba(196,91,74,0.18)'}}>
+            <div style={{fontSize:10,letterSpacing:'0.2em',marginBottom:7,fontWeight:600,color:'#e07a65'}}>주의할 띠</div>
+            <div style={{fontSize:13,lineHeight:1.8,fontWeight:300,wordBreak:'keep-all'}}>{d.compat_avoid}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 종합 총평 ── */}
+      <div style={s.card}>
+        <div style={s.secHead}><div style={s.secDot}/><div style={s.secTitle}>종합 총평</div></div>
+        <p style={s.bodyText}>{d.summary}</p>
+      </div>
+
+      {/* ── 인라인 광고 (결과 하단) ── */}
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:9,color:C.textDim,letterSpacing:'0.1em',marginBottom:4,textAlign:'center'}}>광고</div>
+        <AdBanner slot={AD_SLOT_INLINE}/>
+      </div>
+
+      <button style={{...s.mainBtn,background:'transparent',border:`1px solid ${C.border}`,color:C.textMuted,marginBottom:80}} onClick={onReset}>다시 분석하기</button>
+    </div>
+  );
+};
+
+// ── 운세 탭 ──
+const FortuneTab = () => {
+  const [gender,setGender]=useState('female'); const [loading,setLoading]=useState(false);
+  const [err,setErr]=useState(''); const [result,setResult]=useState(null); const [period,setPeriod]=useState('today');
+
+  const submit = async () => {
+    setErr('');
+    const y=parseInt(document.getElementById('f-year')?.value||'');
+    const m=parseInt(document.getElementById('f-month')?.value||'');
+    const d=parseInt(document.getElementById('f-day')?.value||'');
+    if(!y||!m||!d||m<1||m>12||d<1||d>31){setErr('년, 월, 일을 올바르게 입력해주세요.');return;}
+    setLoading(true);
+    try {
+      const sj=computeSaju(y,m,d,null,gender);
+      const now=new Date(), ty=now.getFullYear(), tm=now.getMonth()+1, td=now.getDate();
+      const todaySj=computeSaju(ty,tm,td,null,gender);
+      const gTxt=gender==='male'?'남성':'여성';
+
+      const data = await callClaude(`당신은 30년 경력의 한국 전통 사주명리학 전문가입니다.
+중요: 응답은 반드시 한글로만 작성하세요. 한자는 절대 사용하지 마세요.
+
+【의뢰인】 ${y}년 ${m}월 ${d}일 (${gTxt})
+사주: ${sj.pillars[0].sky}${sj.pillars[0].earth}/${sj.pillars[1].sky}${sj.pillars[1].earth}/${sj.pillars[2].sky}${sj.pillars[2].earth}
+일간: ${sj.pillars[2].sky}(${sj.dayElem}) · 띠: ${sj.zodiac}띠
+
+【오늘 일진】 ${ty}년 ${tm}월 ${td}일
+오늘일주: ${todaySj.pillars[2].sky}${todaySj.pillars[2].earth} / 이달월주: ${todaySj.pillars[1].sky}${todaySj.pillars[1].earth} / 올해년주: ${todaySj.pillars[0].sky}${todaySj.pillars[0].earth}
+
+다음 JSON으로만 응답하세요. 반드시 완전한 JSON을 출력하세요:
+{
+  "today": {
+    "score": 숫자만,
+    "overall": "오늘 기운 흐름 3~4문장",
+    "love": "오늘 애정운 2~3문장",
+    "money": "오늘 재물운 2~3문장",
+    "work": "오늘 직업운 2~3문장",
+    "health": "오늘 건강운 2문장",
+    "advice": "오늘 핵심 조언 2~3문장",
+    "lucky": "행운 색·방향·시간대 한 줄"
+  },
+  "thisMonth": {
+    "score": 숫자만,
+    "overall": "이번달 기운 3~4문장",
+    "love": "이번달 애정운 2~3문장",
+    "money": "이번달 재물운 2~3문장",
+    "work": "이번달 직업운 2~3문장",
+    "advice": "이번달 핵심 조언 2~3문장"
+  },
+  "thisYear": {
+    "score": 숫자만,
+    "overall": "올해 흐름 3~4문장",
+    "love": "올해 애정운 2~3문장",
+    "money": "올해 재물운 2~3문장",
+    "work": "올해 직업운 2~3문장",
+    "health": "올해 건강운 2문장",
+    "best_months": "좋은 달 2개와 한 줄 이유",
+    "caution_months": "조심할 달 1~2개와 한 줄 이유",
+    "advice": "올해 핵심 조언 2~3문장"
+  }
+}`);
+      setResult({saju:sj, data, gender});
+    } catch(e){ setErr(e.message); }
+    setLoading(false);
+  };
+
+  const inp = (id, ph) => <NumInput id={id} ph={ph}/>;
+
+  if(loading) return <Spinner/>;
+
+  if(result) {
+    const {saju:sj,data:d}=result;
+    const cur=period==='today'?d.today:period==='month'?d.thisMonth:d.thisYear;
+    const isToday=period==='today', isYear=period==='year';
+    const scoreDesc=cur.score>=85?'매우 좋음 ✦':cur.score>=70?'좋음':cur.score>=50?'보통':'주의 필요';
+    return (
+      <div>
+        <div style={s.card}>
+          <div style={{fontSize:12,color:C.textMuted,marginBottom:16}}>
+            <span style={{color:C.primary,fontWeight:600}}>{sj.zodiac}띠</span> · 일간 {sj.pillars[2].sky}({ELEM_KO[sj.dayElem]}) · {result.gender==='male'?'남성':'여성'}
+          </div>
+          <div style={s.periodTabs}>
+            {[['today','오늘'],['month','이번달'],['year','올해']].map(([k,l])=>(
+              <button key={k} style={s.ptab(period===k)} onClick={()=>setPeriod(k)}>{l}</button>
+            ))}
+          </div>
+          <div style={s.scoreBlock}>
+            <div style={s.scoreBig}>{cur.score}</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:11,color:C.textMuted,marginBottom:7,fontWeight:500}}>{period==='today'?'오늘':period==='month'?'이번달':'올해'} 운세 지수</div>
+              <div style={s.scoreBar}><div style={s.scoreFill(cur.score)}/></div>
+              <div style={{fontSize:12,color:C.textMuted}}>{scoreDesc}</div>
+            </div>
+          </div>
+          <div style={s.secHead}><div style={s.secDot}/><div style={s.secTitle}>종합운</div></div>
+          <p style={{...s.bodyText,marginBottom:16}}>{cur.overall}</p>
+          <Divider/>
+          <FItem icon="💕" label="애정운" text={cur.love}/>
+          <FItem icon="💰" label="재물운" text={cur.money}/>
+          <FItem icon="💼" label="직업·학업운" text={cur.work}/>
+          {cur.health && <FItem icon="🌿" label="건강운" text={cur.health}/>}
+          {isToday && cur.lucky && <FItem icon="⭐" label="오늘의 행운" text={cur.lucky}/>}
+          {isYear && cur.best_months && <FItem icon="🌟" label="좋은 달" text={cur.best_months}/>}
+          {isYear && cur.caution_months && <FItem icon="⚠️" label="조심할 달" text={cur.caution_months}/>}
+          <Divider/>
+          <div style={s.secHead}><div style={s.secDot}/><div style={s.secTitle}>핵심 조언</div></div>
+          <p style={s.bodyText}>{cur.advice}</p>
+        </div>
+        <button style={{...s.mainBtn,background:'transparent',border:`1px solid ${C.border}`,color:C.textMuted}} onClick={()=>setResult(null)}>다시 조회하기</button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={s.card}>
+      <div style={s.cardLabel}>운세 조회</div>
+      <div style={s.formRow}>
+        <div style={s.formGroup}><label style={s.label}>년도</label><NumInput id="f-year" ph="예) 1990"/></div>
+        <div style={s.formGroup}><label style={s.label}>월 (1–12)</label><NumInput id="f-month" ph="월"/></div>
+        <div style={s.formGroup}><label style={s.label}>일 (1–31)</label><NumInput id="f-day" ph="일"/></div>
+      </div>
+      <div style={s.genderRow}>
+        <button style={s.genderBtn(gender==='male')} onClick={()=>setGender('male')}>남성</button>
+        <button style={s.genderBtn(gender==='female')} onClick={()=>setGender('female')}>여성</button>
+      </div>
+      {err && <div style={{...s.errBox,marginBottom:14}}>{err}</div>}
+      <button style={s.mainBtn} onClick={submit}>운세 보기</button>
+    </div>
+  );
+};
+
+// ── 궁합 탭 ──
+const CompatTab = () => {
+  const [g1,setG1]=useState('male');
+  const [g2,setG2]=useState('female');
+  const [loading,setLoading]=useState(false); const [err,setErr]=useState(''); const [result,setResult]=useState(null);
+
+  const submit = async () => {
+    setErr('');
+    const y1=parseInt(document.getElementById('c1-year')?.value||'');
+    const m1=parseInt(document.getElementById('c1-month')?.value||'');
+    const d1=parseInt(document.getElementById('c1-day')?.value||'');
+    const y2=parseInt(document.getElementById('c2-year')?.value||'');
+    const m2=parseInt(document.getElementById('c2-month')?.value||'');
+    const d2=parseInt(document.getElementById('c2-day')?.value||'');
+    if(!y1||!m1||!d1||!y2||!m2||!d2){setErr('두 사람의 정보를 모두 입력해주세요.');return;}
+    setLoading(true);
+    try {
+      const s1=computeSaju(y1,m1,d1,null,g1), s2=computeSaju(y2,m2,d2,null,g2);
+      const gt1=g1==='male'?'남성':'여성', gt2=g2==='male'?'남성':'여성';
+
+      const data = await callClaude(`당신은 30년 경력의 한국 전통 사주명리학 전문가입니다.
+중요: 응답은 반드시 한글로만 작성하세요. 한자는 절대 사용하지 마세요.
+
+【사람1】 ${y1}년 ${m1}월 ${d1}일 (${gt1})
+사주: ${s1.pillars[0].sky}${s1.pillars[0].earth}/${s1.pillars[1].sky}${s1.pillars[1].earth}/${s1.pillars[2].sky}${s1.pillars[2].earth}
+일간: ${s1.pillars[2].sky}(${ELEM_KO[s1.dayElem]}) · 띠: ${s1.zodiac}띠
+
+【사람2】 ${y2}년 ${m2}월 ${d2}일 (${gt2})
+사주: ${s2.pillars[0].sky}${s2.pillars[0].earth}/${s2.pillars[1].sky}${s2.pillars[1].earth}/${s2.pillars[2].sky}${s2.pillars[2].earth}
+일간: ${s2.pillars[2].sky}(${ELEM_KO[s2.dayElem]}) · 띠: ${s2.zodiac}띠
+
+다음 JSON으로만 응답하세요. 반드시 완전한 JSON을 출력하세요:
+{
+  "score": 숫자만,
+  "grade": "등급(천생연분/매우 좋은 궁합/좋은 궁합/보통 궁합/노력이 필요한 궁합)",
+  "relationship": "상생 또는 상극 또는 비화",
+  "summary": "전체 궁합 총평 3~4문장",
+  "love": "애정 궁합 2~3문장",
+  "life": "생활·가치관 궁합 2~3문장",
+  "work": "사업·우정 궁합 2문장",
+  "strengths": "잘 맞는 부분 2~3문장",
+  "challenges": "주의할 부분 2~3문장",
+  "person1_role": "${gt1}의 역할 2문장",
+  "person2_role": "${gt2}의 역할 2문장",
+  "best_period": "가장 잘 맞는 시기·상황 한 줄",
+  "advice": "두 사람에게 드리는 조언 3~4문장"
+}`);
+      setResult({s1, s2, data, g1:gt1, g2:gt2});
+    } catch(e){ setErr(e.message); }
+    setLoading(false);
+  };
+
+  if(loading) return <Spinner/>;
+
+  if(result) {
+    const {s1,s2,data:d,g1,g2}=result;
+    const relCls=d.relationship==='상생'?{color:'#6dba8a',border:'rgba(109,186,138,0.3)',bg:'rgba(109,186,138,0.08)'}:d.relationship==='상극'?{color:'#e07a65',border:'rgba(224,122,101,0.3)',bg:'rgba(224,122,101,0.08)'}:{color:C.primary,border:'rgba(255,174,0,0.3)',bg:'rgba(255,174,0,0.08)'};
+    return (
+      <div>
+        <div style={s.card}>
+          <div style={{textAlign:'center',padding:'12px 0 20px'}}>
+            <div style={{fontSize:64,fontWeight:700,color:C.primary,lineHeight:1}}>{d.score}</div>
+            <div style={{fontSize:11,letterSpacing:'0.2em',color:C.textMuted,marginTop:4}}>궁합 지수</div>
+            <div style={{marginTop:10,display:'inline-block',padding:'5px 16px',background:'rgba(255,174,0,0.08)',border:'1px solid rgba(255,174,0,0.3)',borderRadius:100,fontSize:13,color:C.primary,fontWeight:600}}>{d.grade}</div>
+          </div>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:24,padding:'0 0 24px'}}>
+            <div style={{textAlign:'center'}}>
+              <div style={{fontSize:32,color:C.text,fontWeight:300}}>{s1.pillars[2].sky}</div>
+              <div style={{fontSize:12,color:C.primary,marginTop:3}}>{ELEM_KO[s1.dayElem]} · {s1.zodiac}띠</div>
+              <div style={{fontSize:11,color:C.textMuted,marginTop:4}}>{g1}</div>
+            </div>
+            <div style={{fontSize:12,letterSpacing:'0.1em',fontWeight:600,padding:'5px 12px',borderRadius:100,border:`1px solid ${relCls.border}`,color:relCls.color,background:relCls.bg}}>{d.relationship}</div>
+            <div style={{textAlign:'center'}}>
+              <div style={{fontSize:32,color:C.text,fontWeight:300}}>{s2.pillars[2].sky}</div>
+              <div style={{fontSize:12,color:C.primary,marginTop:3}}>{ELEM_KO[s2.dayElem]} · {s2.zodiac}띠</div>
+              <div style={{fontSize:11,color:C.textMuted,marginTop:4}}>{g2}</div>
+            </div>
+          </div>
+          <div style={s.scoreBar}><div style={{...s.scoreFill(d.score),marginBottom:22}}/></div>
+
+          {[['종합 궁합',d.summary],['애정 궁합',d.love],['생활과 가치관 궁합',d.life],['사업과 우정 궁합',d.work]].map(([t,v],i)=>(
+            <div key={t}>{i>0&&<Divider/>}<div style={{marginBottom:20}}><div style={s.secHead}><div style={s.secDot}/><div style={s.secTitle}>{t}</div></div><p style={s.bodyText}>{v}</p></div></div>
+          ))}
+          <Divider/>
+          <div style={s.compatGrid}>
+            <div style={{padding:14,borderRadius:10,background:'rgba(109,186,138,0.07)',border:'1px solid rgba(109,186,138,0.18)'}}>
+              <div style={{fontSize:10,letterSpacing:'0.2em',marginBottom:7,fontWeight:600,color:'#6dba8a'}}>잘 맞는 부분</div>
+              <div style={{fontSize:13,lineHeight:1.8,fontWeight:300,wordBreak:'keep-all'}}>{d.strengths}</div>
+            </div>
+            <div style={{padding:14,borderRadius:10,background:'rgba(196,91,74,0.07)',border:'1px solid rgba(196,91,74,0.18)'}}>
+              <div style={{fontSize:10,letterSpacing:'0.2em',marginBottom:7,fontWeight:600,color:'#e07a65'}}>주의할 부분</div>
+              <div style={{fontSize:13,lineHeight:1.8,fontWeight:300,wordBreak:'keep-all'}}>{d.challenges}</div>
+            </div>
+          </div>
+          <Divider/>
+          <FItem icon="👤" label={`${g1}의 역할`} text={d.person1_role}/>
+          <FItem icon="👤" label={`${g2}의 역할`} text={d.person2_role}/>
+          <FItem icon="🌟" label="가장 잘 맞는 시기" text={d.best_period}/>
+          <Divider/>
+          <div style={s.secHead}><div style={s.secDot}/><div style={s.secTitle}>두 분께 드리는 조언</div></div>
+          <p style={s.bodyText}>{d.advice}</p>
+        </div>
+        <button style={{...s.mainBtn,background:'transparent',border:`1px solid ${C.border}`,color:C.textMuted}} onClick={()=>setResult(null)}>다시 분석하기</button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div style={s.card}>
+        <div style={s.cardLabel}>나의 정보</div>
+        <div style={s.formRow}>
+          <div style={s.formGroup}><label style={s.label}>년도</label><NumInput id="c1-year" ph="예) 1990"/></div>
+          <div style={s.formGroup}><label style={s.label}>월 (1–12)</label><NumInput id="c1-month" ph="월"/></div>
+          <div style={s.formGroup}><label style={s.label}>일 (1–31)</label><NumInput id="c1-day" ph="일"/></div>
+        </div>
+        <div style={s.genderRow}>
+          <button style={s.genderBtn(g1==='male')} onClick={()=>setG1('male')}>남성</button>
+          <button style={s.genderBtn(g1==='female')} onClick={()=>setG1('female')}>여성</button>
+        </div>
+      </div>
+      <div style={s.card}>
+        <div style={s.cardLabel}>상대방 정보</div>
+        <div style={s.formRow}>
+          <div style={s.formGroup}><label style={s.label}>년도</label><NumInput id="c2-year" ph="예) 1990"/></div>
+          <div style={s.formGroup}><label style={s.label}>월 (1–12)</label><NumInput id="c2-month" ph="월"/></div>
+          <div style={s.formGroup}><label style={s.label}>일 (1–31)</label><NumInput id="c2-day" ph="일"/></div>
+        </div>
+        <div style={s.genderRow}>
+          <button style={s.genderBtn(g2==='male')} onClick={()=>setG2('male')}>남성</button>
+          <button style={s.genderBtn(g2==='female')} onClick={()=>setG2('female')}>여성</button>
+        </div>
+      </div>
+      {err && <div style={{...s.errBox,marginBottom:14}}>{err}</div>}
+      <button style={s.mainBtn} onClick={submit}>궁합 분석하기</button>
+    </div>
+  );
+};
+
+// ── 개인정보처리방침 모달 ──
+const PrivacyModal = ({onClose}) => (
+  <div style={{position:'fixed',inset:0,zIndex:2000,background:'rgba(0,0,0,0.85)',display:'flex',alignItems:'flex-end',justifyContent:'center'}}
+    onClick={onClose}>
+    <div style={{background:'#141418',border:'1px solid #2a2a35',borderRadius:'20px 20px 0 0',width:'100%',maxWidth:680,maxHeight:'80vh',overflow:'auto',padding:'28px 24px 48px'}}
+      onClick={e=>e.stopPropagation()}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+        <div style={{fontSize:15,fontWeight:700,color:'#f0ede8'}}>개인정보처리방침</div>
+        <button onClick={onClose} style={{background:'none',border:'none',color:'#7a7880',fontSize:20,cursor:'pointer'}}>✕</button>
+      </div>
+      <div style={{fontSize:13,lineHeight:2,color:'#9a9898',wordBreak:'keep-all'}}>
+        <p style={{marginBottom:12}}><strong style={{color:'#f0ede8'}}>오늘의 사주</strong>는 사용자의 개인정보를 소중히 여기며, 아래와 같이 개인정보처리방침을 안내합니다.</p>
+
+        <p style={{marginBottom:6,color:'#FFAE00',fontWeight:600}}>1. 수집하는 정보</p>
+        <p style={{marginBottom:12}}>본 서비스는 생년월일, 성별, 이름(선택)을 사주 분석 목적으로만 사용하며, 서버에 저장하지 않습니다. 입력된 정보는 분석 완료 후 즉시 폐기됩니다.</p>
+
+        <p style={{marginBottom:6,color:'#FFAE00',fontWeight:600}}>2. 광고 서비스</p>
+        <p style={{marginBottom:12}}>본 서비스는 Google AdSense를 통해 광고를 제공합니다. Google은 쿠키를 사용하여 사용자의 관심사에 맞는 광고를 표시할 수 있습니다. Google의 광고 쿠키 사용에 대한 자세한 내용은 <a href="https://policies.google.com/technologies/ads" target="_blank" style={{color:'#FFAE00'}}>Google 광고 정책</a>을 참고하세요.</p>
+
+        <p style={{marginBottom:6,color:'#FFAE00',fontWeight:600}}>3. 쿠키 사용</p>
+        <p style={{marginBottom:12}}>본 서비스는 Google AdSense 광고 게재를 위해 제3자 쿠키를 사용할 수 있습니다. 브라우저 설정에서 쿠키를 비활성화할 수 있으나, 일부 서비스 이용이 제한될 수 있습니다.</p>
+
+        <p style={{marginBottom:6,color:'#FFAE00',fontWeight:600}}>4. 제3자 제공</p>
+        <p style={{marginBottom:12}}>수집된 정보는 법령에 의한 경우를 제외하고 제3자에게 제공되지 않습니다.</p>
+
+        <p style={{marginBottom:6,color:'#FFAE00',fontWeight:600}}>5. 문의</p>
+        <p>개인정보 관련 문의는 서비스 내 문의 채널을 통해 연락 바랍니다.</p>
+      </div>
+    </div>
+  </div>
+);
+
+// ── 이용약관 모달 ──
+const TermsModal = ({onClose}) => (
+  <div style={{position:'fixed',inset:0,zIndex:2000,background:'rgba(0,0,0,0.85)',display:'flex',alignItems:'flex-end',justifyContent:'center'}}
+    onClick={onClose}>
+    <div style={{background:'#141418',border:'1px solid #2a2a35',borderRadius:'20px 20px 0 0',width:'100%',maxWidth:680,maxHeight:'80vh',overflow:'auto',padding:'28px 24px 48px'}}
+      onClick={e=>e.stopPropagation()}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+        <div style={{fontSize:15,fontWeight:700,color:'#f0ede8'}}>이용약관</div>
+        <button onClick={onClose} style={{background:'none',border:'none',color:'#7a7880',fontSize:20,cursor:'pointer'}}>✕</button>
+      </div>
+      <div style={{fontSize:13,lineHeight:2,color:'#9a9898',wordBreak:'keep-all'}}>
+        <p style={{marginBottom:12}}>본 약관은 <strong style={{color:'#f0ede8'}}>오늘의 사주</strong> 서비스 이용에 관한 기본적인 사항을 규정합니다.</p>
+
+        <p style={{marginBottom:6,color:'#FFAE00',fontWeight:600}}>1. 서비스 목적</p>
+        <p style={{marginBottom:12}}>오늘의 사주는 전통 사주명리학을 기반으로 한 AI 분석 서비스로, 오락 및 참고 목적으로 제공됩니다. 분석 결과는 전문적인 상담을 대체하지 않습니다.</p>
+
+        <p style={{marginBottom:6,color:'#FFAE00',fontWeight:600}}>2. 면책 조항</p>
+        <p style={{marginBottom:12}}>본 서비스의 분석 결과는 참고용이며, 이를 근거로 한 어떠한 결정이나 행동에 대해 서비스 운영자는 책임을 지지 않습니다.</p>
+
+        <p style={{marginBottom:6,color:'#FFAE00',fontWeight:600}}>3. 지적재산권</p>
+        <p style={{marginBottom:12}}>본 서비스의 디자인 및 콘텐츠에 대한 지적재산권은 운영자에게 있습니다.</p>
+
+        <p style={{marginBottom:6,color:'#FFAE00',fontWeight:600}}>4. 약관 변경</p>
+        <p>본 약관은 서비스 개선을 위해 사전 고지 없이 변경될 수 있습니다.</p>
+      </div>
+    </div>
+  </div>
+);
+
+// ── 푸터 ──
+const Footer = ({onPrivacy, onTerms}) => (
+  <div style={{maxWidth:680,margin:'0 auto',padding:'32px 20px 160px',textAlign:'center',borderTop:'1px solid #2a2a35'}}>
+    <div style={{fontSize:18,fontWeight:700,color:'#FFAE00',marginBottom:6,letterSpacing:'0.04em'}}>오늘의 사주</div>
+    <div style={{fontSize:11,color:'#4a4858',letterSpacing:'0.2em',marginBottom:20}}>AI 사주 · 음양오행 · 만세력</div>
+    <div style={{fontSize:12,color:'#7a7880',lineHeight:2,marginBottom:20,wordBreak:'keep-all'}}>
+      본 서비스는 전통 사주명리학을 바탕으로 한 AI 분석 서비스입니다.<br/>
+      분석 결과는 참고용이며 전문 상담을 대체하지 않습니다.
+    </div>
+    <div style={{display:'flex',justifyContent:'center',gap:20,marginBottom:20}}>
+      <button onClick={onPrivacy} style={{background:'none',border:'none',color:'#7a7880',fontSize:12,cursor:'pointer',textDecoration:'underline'}}>개인정보처리방침</button>
+      <span style={{color:'#2a2a35'}}>|</span>
+      <button onClick={onTerms} style={{background:'none',border:'none',color:'#7a7880',fontSize:12,cursor:'pointer',textDecoration:'underline'}}>이용약관</button>
+    </div>
+    <div style={{fontSize:11,color:'#4a4858'}}>© 2025 오늘의 사주. All rights reserved.</div>
+  </div>
+);
+
+// ── 메인 앱 ──
+function App() {
+  const [tab,setTab]=useState('saju');
+  const [sajuResult,setSajuResult]=useState(null);
+  const [showPrivacy,setShowPrivacy]=useState(false);
+  const [showTerms,setShowTerms]=useState(false);
+
+  useEffect(() => {
+    if (!document.querySelector('script[src*="adsbygoogle"]')) {
+      const sc = document.createElement('script');
+      sc.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
+      sc.async = true;
+      sc.crossOrigin = 'anonymous';
+      document.head.appendChild(sc);
+    }
+  }, []);
+
+  return (
+    <div style={{background:'#0c0c0f',minHeight:'100vh'}}>
+      <style>{`
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+        @keyframes spinlogo { to { transform: rotate(360deg); } }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0c0c0f; }
+        ::-webkit-scrollbar-thumb { background: #2a2a35; border-radius: 2px; }
+      `}</style>
+      <div style={{maxWidth:680,margin:'0 auto',padding:'0 20px 160px',fontFamily:'Pretendard,-apple-system,sans-serif',color:'#f0ede8',WebkitFontSmoothing:'antialiased'}}>
+        <div style={{textAlign:'center',padding:'48px 0 32px'}}>
+          <div style={{width:40,height:40,border:'1.5px solid #FFAE00',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'#FFAE00',margin:'0 auto 14px',animation:'spinlogo 25s linear infinite'}}>✦</div>
+          <div style={{fontSize:22,fontWeight:700,letterSpacing:'0.04em',color:'#f0ede8'}}>오늘의 사주</div>
+          <div style={{fontSize:11,letterSpacing:'0.28em',color:'#7a7880',marginTop:5,fontWeight:300}}>AI 사주 · 음양오행 · 만세력</div>
+        </div>
+        <div style={{display:'flex',background:'#141418',border:'1px solid #2a2a35',borderRadius:12,padding:4,marginBottom:28,gap:2}}>
+          {[['saju','사주 분석'],['fortune','운세'],['compat','궁합']].map(([k,l])=>(
+            <button key={k} style={{flex:1,padding:'10px 0',border:tab===k?'1px solid #2a2a35':'none',background:tab===k?'#1c1c22':'transparent',color:tab===k?'#FFAE00':'#7a7880',fontFamily:'Pretendard,sans-serif',fontSize:13,fontWeight:500,cursor:'pointer',borderRadius:9,transition:'all 0.2s'}}
+              onClick={()=>{setTab(k);setSajuResult(null);}}>{l}</button>
+          ))}
+        </div>
+        {tab==='saju' && (sajuResult ? <SajuResult result={sajuResult} onReset={()=>setSajuResult(null)}/> : <SajuForm onResult={setSajuResult}/>)}
+        {tab==='fortune' && <FortuneTab/>}
+        {tab==='compat' && <CompatTab/>}
+      </div>
+
+      <Footer onPrivacy={()=>setShowPrivacy(true)} onTerms={()=>setShowTerms(true)}/>
+      <BottomAdBar/>
+      {showPrivacy && <PrivacyModal onClose={()=>setShowPrivacy(false)}/>}
+      {showTerms && <TermsModal onClose={()=>setShowTerms(false)}/>}
+    </div>
+  );
+}
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>

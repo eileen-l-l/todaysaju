@@ -3,12 +3,21 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="AI 기반 사주팔자 분석. 만세력 자동 계산, 운세, 궁합까지."/>
-  <title>오늘의 사주 — AI 사주팔자 분석</title>
+  <meta name="description" content="AI 사주팔자 분석 서비스. 생년월일을 입력하면 만세력 자동 계산 후 성격, 재물운, 애정운, 건강운, 궁합까지 상세 분석해드립니다."/>
+  <meta name="keywords" content="사주,사주팔자,무료사주,사주분석,운세,궁합,만세력,음양오행,AI사주"/>
+  <meta name="author" content="오늘의 사주"/>
+  <meta property="og:title" content="오늘의 사주 — AI 사주팔자 분석"/>
+  <meta property="og:description" content="생년월일을 입력하면 AI가 만세력으로 사주팔자를 분석해드립니다. 성격, 재물운, 애정운, 궁합까지."/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://todaysaju.netlify.app"/>
+  <meta property="og:locale" content="ko_KR"/>
+  <meta name="twitter:card" content="summary"/>
+  <meta name="twitter:title" content="오늘의 사주 — AI 사주팔자 분석"/>
+  <meta name="twitter:description" content="생년월일을 입력하면 AI가 만세력으로 사주팔자를 분석해드립니다."/>
+  <link rel="canonical" href="https://todaysaju.netlify.app"/>
+  <title>오늘의 사주 — AI 사주팔자 무료 분석</title>
 
-  <!-- ✅ 1단계: ca-pub-XXXXXXXXXXXXXXXX 를 본인 AdSense ID로 교체 -->
- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1247128693899383"
-     crossorigin="anonymous"></script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1247128693899383" crossorigin="anonymous"></script>
 
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -29,6 +38,18 @@
 </head>
 <body>
   <div id="root"></div>
+
+  <!-- 구글 봇용 정적 콘텐츠 (JS 비활성 환경에서도 읽힘) -->
+  <noscript>
+    <div style="max-width:680px;margin:0 auto;padding:40px 20px;font-family:sans-serif;color:#f0ede8;background:#0c0c0f;">
+      <h1 style="color:#FFAE00;margin-bottom:16px">오늘의 사주 — AI 사주팔자 분석</h1>
+      <p style="margin-bottom:24px;line-height:1.8;color:#9a9898">생년월일을 입력하면 AI가 전통 만세력으로 사주팔자를 자동 계산하고, 성격·재물운·애정운·건강운·궁합을 상세하게 분석해드립니다. JavaScript를 활성화해주세요.</p>
+      <h2 style="color:#FFAE00;margin-bottom:12px;font-size:18px">사주팔자란?</h2>
+      <p style="line-height:1.8;color:#9a9898;margin-bottom:24px">사주팔자(四柱八字)는 태어난 연·월·일·시의 네 기둥과 여덟 글자로 구성된 한국 전통 운명 분석 체계입니다. 음양오행의 원리를 바탕으로 개인의 타고난 기질과 운명의 흐름을 파악합니다.</p>
+      <h2 style="color:#FFAE00;margin-bottom:12px;font-size:18px">서비스 문의</h2>
+      <p style="color:#9a9898">이메일: aerimilk@naver.com</p>
+    </div>
+  </noscript>
   <script type="text/babel">
     const { useState, useEffect, useRef, useCallback } = React;
 
@@ -183,7 +204,7 @@ const Divider = () => <div style={s.divider}/>;
 
 // ── Google AdSense 광고 컴포넌트 ──
 // 배포 후 YOUR_ADSENSE_CLIENT, YOUR_AD_SLOT_ID 를 실제 값으로 교체하세요
-const ADSENSE_CLIENT = 'ca-pub-1247128693899383'; // ← 본인 AdSense 퍼블리셔 ID
+const ADSENSE_CLIENT = 'ca-pub-XXXXXXXXXXXXXXXX'; // ← 본인 AdSense 퍼블리셔 ID
 const AD_SLOT_INLINE = 'XXXXXXXXXX';              // ← 인라인 광고 슬롯 ID
 const AD_SLOT_BOTTOM = 'XXXXXXXXXX';              // ← 하단 고정 광고 슬롯 ID
 
@@ -751,7 +772,8 @@ const PrivacyModal = ({onClose}) => (
         <p style={{marginBottom:12}}>수집된 정보는 법령에 의한 경우를 제외하고 제3자에게 제공되지 않습니다.</p>
 
         <p style={{marginBottom:6,color:'#FFAE00',fontWeight:600}}>5. 문의</p>
-        <p>개인정보 관련 문의는 서비스 내 문의 채널을 통해 연락 바랍니다.</p>
+        <p>개인정보 관련 문의는 아래 이메일로 연락해 주세요.<br/>
+        📧 <a href="mailto:aerimilk@naver.com" style={{color:'#FFAE00'}}>aerimilk@naver.com</a></p>
       </div>
     </div>
   </div>
@@ -795,12 +817,17 @@ const Footer = ({onPrivacy, onTerms}) => (
       본 서비스는 전통 사주명리학을 바탕으로 한 AI 분석 서비스입니다.<br/>
       분석 결과는 참고용이며 전문 상담을 대체하지 않습니다.
     </div>
-    <div style={{display:'flex',justifyContent:'center',gap:20,marginBottom:20}}>
-      <button onClick={onPrivacy} style={{background:'none',border:'none',color:'#7a7880',fontSize:12,cursor:'pointer',textDecoration:'underline'}}>개인정보처리방침</button>
+    <div style={{display:'flex',justifyContent:'center',gap:20,marginBottom:16}}>
+      <button onClick={onPrivacy} style={{background:'none',border:'none',color:'#7a7880',fontSize:12,cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}>개인정보처리방침</button>
       <span style={{color:'#2a2a35'}}>|</span>
-      <button onClick={onTerms} style={{background:'none',border:'none',color:'#7a7880',fontSize:12,cursor:'pointer',textDecoration:'underline'}}>이용약관</button>
+      <button onClick={onTerms} style={{background:'none',border:'none',color:'#7a7880',fontSize:12,cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}>이용약관</button>
+      <span style={{color:'#2a2a35'}}>|</span>
+      <a href="mailto:aerimilk@naver.com" style={{color:'#7a7880',fontSize:12,textDecoration:'underline'}}>문의하기</a>
     </div>
-    <div style={{fontSize:11,color:'#4a4858'}}>© 2025 오늘의 사주. All rights reserved.</div>
+    <div style={{fontSize:12,color:'#4a4858',marginBottom:8}}>
+      문의 · 제휴: <a href="mailto:aerimilk@naver.com" style={{color:'#7a7880',textDecoration:'none'}}>aerimilk@naver.com</a>
+    </div>
+    <div style={{fontSize:11,color:'#4a4858'}}>© 2026 오늘의 사주. All rights reserved.</div>
   </div>
 );
 
@@ -831,7 +858,7 @@ function App() {
         ::-webkit-scrollbar-track { background: #0c0c0f; }
         ::-webkit-scrollbar-thumb { background: #2a2a35; border-radius: 2px; }
       `}</style>
-      <div style={{maxWidth:680,margin:'0 auto',padding:'0 20px 160px',fontFamily:'Pretendard,-apple-system,sans-serif',color:'#f0ede8',WebkitFontSmoothing:'antialiased'}}>
+      <div style={{maxWidth:680,margin:'0 auto',padding:'0 20px 40px',fontFamily:'Pretendard,-apple-system,sans-serif',color:'#f0ede8',WebkitFontSmoothing:'antialiased'}}>
         <div style={{textAlign:'center',padding:'48px 0 32px'}}>
           <div style={{width:40,height:40,border:'1.5px solid #FFAE00',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'#FFAE00',margin:'0 auto 14px',animation:'spinlogo 25s linear infinite'}}>✦</div>
           <div style={{fontSize:22,fontWeight:700,letterSpacing:'0.04em',color:'#f0ede8'}}>오늘의 사주</div>
@@ -846,6 +873,65 @@ function App() {
         {tab==='saju' && (sajuResult ? <SajuResult result={sajuResult} onReset={()=>setSajuResult(null)}/> : <SajuForm onResult={setSajuResult}/>)}
         {tab==='fortune' && <FortuneTab/>}
         {tab==='compat' && <CompatTab/>}
+      </div>
+
+      {/* ── 콘텐츠 섹션 (AdSense 심사용 + SEO) ── */}
+      <div style={{maxWidth:680,margin:'0 auto',padding:'0 20px'}}>
+
+        {/* 사주팔자란 */}
+        <div style={{background:'#141418',border:'1px solid #2a2a35',borderRadius:16,padding:28,marginBottom:14}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16}}>
+            <div style={{width:5,height:5,background:'#FFAE00',borderRadius:'50%'}}/>
+            <div style={{fontSize:11,fontWeight:600,letterSpacing:'0.2em',color:'#FFAE00',textTransform:'uppercase'}}>사주팔자란</div>
+          </div>
+          <p style={{fontSize:14,lineHeight:2,color:'#9a9898',wordBreak:'keep-all',marginBottom:14}}>
+            사주팔자(四柱八字)는 사람이 태어난 연(年)·월(月)·일(日)·시(時)의 네 기둥과 여덟 글자로 구성된 한국 전통 운명 분석 체계입니다. 수천 년의 역사를 가진 동양 철학에서 비롯된 이 학문은 음양오행(陰陽五行)의 원리를 바탕으로 개인의 타고난 기질, 적성, 운명의 흐름을 파악합니다.
+          </p>
+          <p style={{fontSize:14,lineHeight:2,color:'#9a9898',wordBreak:'keep-all'}}>
+            오늘의 사주는 전통 만세력 계산법을 AI와 결합하여, 복잡한 사주 계산을 자동으로 처리하고 누구나 쉽게 자신의 사주를 이해할 수 있도록 도와드립니다.
+          </p>
+        </div>
+
+        {/* 음양오행 */}
+        <div style={{background:'#141418',border:'1px solid #2a2a35',borderRadius:16,padding:28,marginBottom:14}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16}}>
+            <div style={{width:5,height:5,background:'#FFAE00',borderRadius:'50%'}}/>
+            <div style={{fontSize:11,fontWeight:600,letterSpacing:'0.2em',color:'#FFAE00',textTransform:'uppercase'}}>음양오행</div>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:8,marginBottom:16}}>
+            {[['木','목','성장·발전','#6dba8a','rgba(74,143,100,0.1)'],['火','화','열정·활력','#e07a65','rgba(196,91,74,0.1)'],['土','토','안정·중심','#FFAE00','rgba(255,174,0,0.1)'],['金','금','결단·완성','#a8a8c0','rgba(168,168,192,0.1)'],['水','수','지혜·흐름','#6a9fd4','rgba(74,127,196,0.1)']].map(([ch,ko,desc,color,bg])=>(
+              <div key={ko} style={{background:bg,border:`1px solid ${color}30`,borderRadius:10,padding:'12px 8px',textAlign:'center'}}>
+                <div style={{fontSize:22,color:color,marginBottom:4,fontWeight:300}}>{ch}</div>
+                <div style={{fontSize:12,color:color,fontWeight:600,marginBottom:4}}>{ko}</div>
+                <div style={{fontSize:10,color:'#7a7880',lineHeight:1.4}}>{desc}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{fontSize:14,lineHeight:2,color:'#9a9898',wordBreak:'keep-all'}}>
+            오행은 목(木)·화(火)·토(土)·금(金)·수(水)의 다섯 가지 기운으로, 우주 만물의 변화와 순환을 설명합니다. 사주 내 오행의 균형과 분포를 분석하면 개인의 강점과 약점, 필요한 에너지를 파악할 수 있습니다.
+          </p>
+        </div>
+
+        {/* FAQ */}
+        <div style={{background:'#141418',border:'1px solid #2a2a35',borderRadius:16,padding:28,marginBottom:14}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:20}}>
+            <div style={{width:5,height:5,background:'#FFAE00',borderRadius:'50%'}}/>
+            <div style={{fontSize:11,fontWeight:600,letterSpacing:'0.2em',color:'#FFAE00',textTransform:'uppercase'}}>자주 묻는 질문</div>
+          </div>
+          {[
+            ['사주 분석 결과는 얼마나 정확한가요?','오늘의 사주는 전통 만세력을 기반으로 한 AI 분석 서비스로, 수천 년간 전해 내려온 사주명리학의 원리를 적용합니다. 다만 분석 결과는 참고용이며, 모든 결정은 본인의 판단에 따라 이루어져야 합니다.'],
+            ['태어난 시간을 모르면 어떻게 하나요?','시간 입력란을 비워두셔도 됩니다. 시주(時柱)를 제외한 연·월·일 세 기둥만으로도 충분히 의미 있는 분석이 가능합니다.'],
+            ['만세력이란 무엇인가요?','만세력(萬歲曆)은 수만 년에 걸친 천문 역법을 담은 동양의 달력 체계입니다. 사주명리학에서 정확한 사주를 계산하려면 양력 생년월일을 음력과 절기에 맞게 변환하는 만세력 계산이 필수입니다. 오늘의 사주는 이 과정을 자동으로 처리합니다.'],
+            ['궁합은 어떻게 보나요?','두 사람의 사주팔자를 비교하여 오행의 상생(相生)·상극(相剋) 관계와 일간(日干)의 조화를 분석합니다. 궁합 탭에서 두 사람의 생년월일과 성별을 입력하시면 AI가 상세한 궁합 분석을 제공합니다.'],
+          ].map(([q,a],i)=>(
+            <div key={i} style={{marginBottom:i<3?18:0}}>
+              <div style={{fontSize:13,fontWeight:600,color:'#f0ede8',marginBottom:6}}>Q. {q}</div>
+              <div style={{fontSize:13,lineHeight:1.9,color:'#9a9898',wordBreak:'keep-all',paddingLeft:14,borderLeft:'2px solid #2a2a35'}}>A. {a}</div>
+              {i<3 && <div style={{height:1,background:'#2a2a35',marginTop:18}}/>}
+            </div>
+          ))}
+        </div>
+
       </div>
 
       <Footer onPrivacy={()=>setShowPrivacy(true)} onTerms={()=>setShowTerms(true)}/>

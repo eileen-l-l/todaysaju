@@ -330,32 +330,32 @@ const SajuForm = ({onResult}) => {
       const dwTxt=sj.dw.map(dw=>`${dw.age}세:${dw.sky}${dw.earth}`).join(' / ');
       const yp=sj.pillars[0],mp=sj.pillars[1],dp=sj.pillars[2],hp=sj.pillars[3];
 
-      const data = await callClaude(`당신은 30년 경력의 한국 전통 사주명리학 전문가입니다. 아래 만세력 사주를 바탕으로 깊고 통찰력 있는 심층 분석을 해주세요.
-중요: 응답은 반드시 한글로만 작성하세요. 한자는 사주팔자 기둥(甲子 등)을 제외하고 절대 사용하지 마세요. 전문용어도 쉬운 한글로 풀어서 설명해주세요.
+      const data = await callClaude(`당신은 한국 전통 사주명리학 전문가입니다. 아래 사주를 분석해주세요.
+중요: 반드시 한글로만 작성하세요. 한자는 사주팔자 기둥(甲子 등)만 허용합니다.
 
 【의뢰인】 ${nm} (${gTxt}) · ${y}년 ${m}월 ${d}일${hour!==null?' '+hour+'시':''}
 【사주팔자】 년주:${yp.sky}${yp.earth} / 월주:${mp.sky}${mp.earth} / 일주:${dp.sky}${dp.earth} / 시주:${hour!==null?hp.sky+hp.earth:'미상'}
 일간: ${dp.sky}(${SKY_KO[dp.si]}일간) · 오행분포: ${elemTxt} · 대운: ${dwTxt} · 띠: ${sj.zodiac}띠
 
-다음 JSON으로만 응답하세요:
+다음 JSON으로만 응답하세요. 각 항목은 간결하게 작성하세요:
 {
-  "destiny_line": "이 사람의 운명을 단 한 문장으로 — 극적이고 시적으로, 마치 소설 첫 줄처럼",
+  "destiny_line": "운명을 한 문장으로 — 시적이고 강렬하게",
   "keywords": ["핵심 키워드 3개, 각 2~4글자"],
   "today_word": "오늘 이 사람에게 전하는 짧고 강렬한 한 마디, 15자 이내",
-  "personality": "성격·기질 심층분석 7~9문장",
-  "talent": "재능·직업적성 5~6문장",
-  "wealth": "재물운 5~6문장",
-  "love": "애정·결혼운 6~7문장",
-  "health": "건강운 4~5문장",
-  "daewun": "대운 흐름 5~6문장",
-  "caution": "주의사항 4~5문장",
-  "yongshin": "이 사주에 필요한 에너지를 쉬운 말로 4~5문장",
-  "lucky_color": "행운색 2~3가지와 이유",
-  "lucky_number": "행운숫자 2~3가지와 이유",
+  "personality": "성격·기질 분석 4~5문장",
+  "talent": "재능·직업적성 3~4문장",
+  "wealth": "재물운 3~4문장",
+  "love": "애정·결혼운 3~4문장",
+  "health": "건강운 3문장",
+  "daewun": "대운 흐름 3~4문장",
+  "caution": "주의사항 3문장",
+  "yongshin": "이 사주에 필요한 에너지 3문장",
+  "lucky_color": "행운색 2가지와 이유",
+  "lucky_number": "행운숫자 2가지와 이유",
   "lucky_direction": "행운방향과 이유",
-  "compat_best": "잘맞는 띠 2~3가지와 이유",
+  "compat_best": "잘맞는 띠 2가지와 이유",
   "compat_avoid": "주의할 띠 2가지와 이유",
-  "summary": "종합총평 6~8문장"
+  "summary": "종합총평 4~5문장"
 }`);
       onResult({saju:sj, data, year:y, month:m, day:d, hour, gender, name:nm});
     } catch(e){ setErr(e.message); }
@@ -542,8 +542,8 @@ const FortuneTab = () => {
       const todaySj=computeSaju(ty,tm,td,null,gender);
       const gTxt=gender==='male'?'남성':'여성';
 
-      const data = await callClaude(`당신은 30년 경력의 한국 전통 사주명리학 전문가입니다.
-중요: 응답은 반드시 한글로만 작성하세요. 한자는 절대 사용하지 마세요.
+      const data = await callClaude(`당신은 한국 전통 사주명리학 전문가입니다.
+중요: 반드시 한글로만 작성하세요.
 
 【의뢰인】 ${y}년 ${m}월 ${d}일 (${gTxt})
 사주: ${sj.pillars[0].sky}${sj.pillars[0].earth}/${sj.pillars[1].sky}${sj.pillars[1].earth}/${sj.pillars[2].sky}${sj.pillars[2].earth}
@@ -552,36 +552,36 @@ const FortuneTab = () => {
 【오늘 일진】 ${ty}년 ${tm}월 ${td}일
 오늘일주: ${todaySj.pillars[2].sky}${todaySj.pillars[2].earth} / 이달월주: ${todaySj.pillars[1].sky}${todaySj.pillars[1].earth} / 올해년주: ${todaySj.pillars[0].sky}${todaySj.pillars[0].earth}
 
-다음 JSON으로만 응답하세요. 반드시 완전한 JSON을 출력하세요:
+다음 JSON으로만 응답하세요:
 {
   "today": {
     "score": 숫자만,
-    "overall": "오늘 기운 흐름 3~4문장",
-    "love": "오늘 애정운 2~3문장",
-    "money": "오늘 재물운 2~3문장",
-    "work": "오늘 직업운 2~3문장",
-    "health": "오늘 건강운 2문장",
-    "advice": "오늘 핵심 조언 2~3문장",
+    "overall": "오늘 기운 2~3문장",
+    "love": "오늘 애정운 1~2문장",
+    "money": "오늘 재물운 1~2문장",
+    "work": "오늘 직업운 1~2문장",
+    "health": "오늘 건강운 1문장",
+    "advice": "오늘 핵심 조언 1~2문장",
     "lucky": "행운 색·방향·시간대 한 줄"
   },
   "thisMonth": {
     "score": 숫자만,
-    "overall": "이번달 기운 3~4문장",
-    "love": "이번달 애정운 2~3문장",
-    "money": "이번달 재물운 2~3문장",
-    "work": "이번달 직업운 2~3문장",
-    "advice": "이번달 핵심 조언 2~3문장"
+    "overall": "이번달 기운 2~3문장",
+    "love": "이번달 애정운 1~2문장",
+    "money": "이번달 재물운 1~2문장",
+    "work": "이번달 직업운 1~2문장",
+    "advice": "이번달 핵심 조언 1~2문장"
   },
   "thisYear": {
     "score": 숫자만,
-    "overall": "올해 흐름 3~4문장",
-    "love": "올해 애정운 2~3문장",
-    "money": "올해 재물운 2~3문장",
-    "work": "올해 직업운 2~3문장",
-    "health": "올해 건강운 2문장",
+    "overall": "올해 흐름 2~3문장",
+    "love": "올해 애정운 1~2문장",
+    "money": "올해 재물운 1~2문장",
+    "work": "올해 직업운 1~2문장",
+    "health": "올해 건강운 1문장",
     "best_months": "좋은 달 2개와 한 줄 이유",
-    "caution_months": "조심할 달 1~2개와 한 줄 이유",
-    "advice": "올해 핵심 조언 2~3문장"
+    "caution_months": "조심할 달 1개와 한 줄 이유",
+    "advice": "올해 핵심 조언 1~2문장"
   }
 }`);
       setResult({saju:sj, data, gender});
@@ -674,8 +674,8 @@ const CompatTab = () => {
       const s1=computeSaju(y1,m1,d1,null,g1), s2=computeSaju(y2,m2,d2,null,g2);
       const gt1=g1==='male'?'남성':'여성', gt2=g2==='male'?'남성':'여성';
 
-      const data = await callClaude(`당신은 30년 경력의 한국 전통 사주명리학 전문가입니다.
-중요: 응답은 반드시 한글로만 작성하세요. 한자는 절대 사용하지 마세요.
+      const data = await callClaude(`당신은 한국 전통 사주명리학 전문가입니다.
+중요: 반드시 한글로만 작성하세요.
 
 【사람1】 ${y1}년 ${m1}월 ${d1}일 (${gt1})
 사주: ${s1.pillars[0].sky}${s1.pillars[0].earth}/${s1.pillars[1].sky}${s1.pillars[1].earth}/${s1.pillars[2].sky}${s1.pillars[2].earth}
@@ -685,21 +685,21 @@ const CompatTab = () => {
 사주: ${s2.pillars[0].sky}${s2.pillars[0].earth}/${s2.pillars[1].sky}${s2.pillars[1].earth}/${s2.pillars[2].sky}${s2.pillars[2].earth}
 일간: ${s2.pillars[2].sky}(${ELEM_KO[s2.dayElem]}) · 띠: ${s2.zodiac}띠
 
-다음 JSON으로만 응답하세요. 반드시 완전한 JSON을 출력하세요:
+다음 JSON으로만 응답하세요:
 {
   "score": 숫자만,
   "grade": "등급(천생연분/매우 좋은 궁합/좋은 궁합/보통 궁합/노력이 필요한 궁합)",
   "relationship": "상생 또는 상극 또는 비화",
-  "summary": "전체 궁합 총평 3~4문장",
-  "love": "애정 궁합 2~3문장",
-  "life": "생활·가치관 궁합 2~3문장",
-  "work": "사업·우정 궁합 2문장",
-  "strengths": "잘 맞는 부분 2~3문장",
-  "challenges": "주의할 부분 2~3문장",
-  "person1_role": "${gt1}의 역할 2문장",
-  "person2_role": "${gt2}의 역할 2문장",
+  "summary": "전체 궁합 총평 2~3문장",
+  "love": "애정 궁합 2문장",
+  "life": "생활·가치관 궁합 2문장",
+  "work": "사업·우정 궁합 1~2문장",
+  "strengths": "잘 맞는 부분 2문장",
+  "challenges": "주의할 부분 2문장",
+  "person1_role": "${gt1}의 역할 1~2문장",
+  "person2_role": "${gt2}의 역할 1~2문장",
   "best_period": "가장 잘 맞는 시기·상황 한 줄",
-  "advice": "두 사람에게 드리는 조언 3~4문장"
+  "advice": "두 사람에게 드리는 조언 2~3문장"
 }`);
       setResult({s1, s2, data, g1:gt1, g2:gt2});
     } catch(e){ setErr(e.message); }

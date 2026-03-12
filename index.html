@@ -77,10 +77,10 @@
 
     <h2>서비스 정보</h2>
     <p>오늘의 사주는 전통 사주명리학과 AI 기술을 결합한 무료 사주 분석 서비스입니다. 만세력 자동 계산, 음양오행 분석, 대운 흐름 파악, 궁합 분석 기능을 제공합니다.</p>
-    <p>운영자 이메일: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b0d1d5c2d9ddd9dcdbf0ded1c6d5c29ed3dfdd">[email&#160;protected]</a></p>
+    <p>운영자 이메일: aerimilk@naver.com</p>
     <p>개인정보처리방침 및 이용약관은 사이트 하단에서 확인하실 수 있습니다.</p>
   </div>
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="text/babel">
+  <script type="text/babel">
     const { useState, useEffect, useRef, useCallback } = React;
 
 // ── 만세력 상수 ──
@@ -946,4 +946,13 @@ function App() {
       <Footer onPrivacy={()=>setShowPrivacy(true)} onTerms={()=>setShowTerms(true)}/>
       <BottomAdBar/>
       {showPrivacy && <PrivacyModal onClose={()=>setShowPrivacy(false)}/>}
-      {showTerms && <TermsModal onClose={()=>setShowT
+      {showTerms && <TermsModal onClose={()=>setShowTerms(false)}/>}
+    </div>
+  );
+}
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+  <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js" async></script>
+</body>
+</html>

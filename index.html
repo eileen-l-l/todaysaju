@@ -304,6 +304,7 @@ const SajuForm = ({onResult}) => {
 
       const data = await callClaude(`당신은 30년 경력의 한국 전통 사주명리학 전문가입니다. 아래 만세력 사주를 바탕으로 깊고 통찰력 있는 심층 분석을 해주세요.
 중요: 응답은 반드시 한글로만 작성하세요. 한자는 사주팔자 기둥(甲子 등)을 제외하고 절대 사용하지 마세요. 전문용어도 쉬운 한글로 풀어서 설명해주세요.
+톤 지침: 전체적으로 따뜻하고 희망적인 톤을 유지하세요. 부정적인 면도 성장의 기회로 긍정적으로 표현하세요. 사용자가 읽고 힘을 얻을 수 있도록 작성하세요.
 
 【의뢰인】 ${nm} (${gTxt}) · ${y}년 ${m}월 ${d}일${hour!==null?' '+hour+'시':''}
 【사주팔자】 년주:${yp.sky}${yp.earth} / 월주:${mp.sky}${mp.earth} / 일주:${dp.sky}${dp.earth} / 시주:${hour!==null?hp.sky+hp.earth:'미상'}
@@ -311,7 +312,7 @@ const SajuForm = ({onResult}) => {
 
 다음 JSON으로만 응답하세요:
 {
-  "destiny_line": "이 사람의 운명을 단 한 문장으로 — 극적이고 시적으로, 마치 소설 첫 줄처럼",
+  "destiny_line": "이 사람의 삶의 방향과 핵심 에너지를 한 문장으로 — 긍정적이고 따뜻하게, 희망적인 메시지로",
   "keywords": ["핵심 키워드 3개, 각 2~4글자"],
   "today_word": "오늘 이 사람에게 전하는 짧고 강렬한 한 마디, 15자 이내",
   "personality": "성격·기질 심층분석 7~9문장",
@@ -836,11 +837,11 @@ const Footer = ({onPrivacy, onTerms}) => (
       본 서비스는 전통 사주명리학을 바탕으로 한 AI 분석 서비스입니다.<br/>
       분석 결과는 참고용이며 전문 상담을 대체하지 않습니다.
     </div>
-    <div style={{display:'flex',justifyContent:'center',alignItems:'center',gap:16,marginBottom:16}}>
-      <button onClick={onPrivacy} style={{background:'none',border:'none',color:'#7a7880',fontSize:12,cursor:'pointer',textDecoration:'underline',fontFamily:'inherit',padding:0}}>개인정보처리방침</button>
-      <span style={{color:'#2a2a35',fontSize:12}}>|</span>
-      <button onClick={onTerms} style={{background:'none',border:'none',color:'#7a7880',fontSize:12,cursor:'pointer',textDecoration:'underline',fontFamily:'inherit',padding:0}}>이용약관</button>
-      <span style={{color:'#2a2a35',fontSize:12}}>|</span>
+    <div style={{display:'flex',justifyContent:'center',gap:20,marginBottom:16}}>
+      <button onClick={onPrivacy} style={{background:'none',border:'none',color:'#7a7880',fontSize:12,cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}>개인정보처리방침</button>
+      <span style={{color:'#2a2a35'}}>|</span>
+      <button onClick={onTerms} style={{background:'none',border:'none',color:'#7a7880',fontSize:12,cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}>이용약관</button>
+      <span style={{color:'#2a2a35'}}>|</span>
       <a href="mailto:aerimilk@naver.com" style={{color:'#7a7880',fontSize:12,textDecoration:'underline'}}>문의하기</a>
     </div>
     <div style={{fontSize:12,color:'#4a4858',marginBottom:8}}>

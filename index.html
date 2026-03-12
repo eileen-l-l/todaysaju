@@ -366,65 +366,6 @@ const SajuForm = ({onResult}) => {
   "compat_avoid": "주의할 띠 2가지와 이유",
   "summary": "종합총평 6~8문장"
 }
-function yearPillar(y, m, d) {
-  // 입춘 이전이면 전년도 기준
-  const ipchun = getIpchun(y);
-  let adjustedY = y;
-  if (m < ipchun.month || (m === ipchun.month && d < ipchun.day)) {
-    adjustedY = y - 1;
-  }
-  const si=((adjustedY-4)%10+10)%10, ei=((adjustedY-4)%12+12)%12;
-  return {sky:SKY[si],earth:EARTH[ei],si,ei};
-}
-function monthPillar(y,m) {
-  const ei=(m+1)%12, ySi=((y-4)%10+10)%10;
-  const base=[2,4,6,8,0][ySi%5], si=(base+(m-1))%10;
-  return {sky:SKY[si],earth:EARTH[ei],si,ei};
-}
-function dayPillar(y,m,d) {
-  const a=Math.floor((14-m)/12),yr=y+4800-a,mo=m+12*a-3;
-  const jdn=d+Math.floor((153*mo+2)/5)+365*yr+Math.floor(yr/4)-Math.floor(yr/100)+Math.floor(yr/400)-32045;
-  const diff=jdn-2415021;
-  const si=((diff%10)+10)%10, ei=((diff%12)+12)%12;
-  return {sky:SKY[si],earth:EARTH[ei],si,ei};
-}
-function hourPillar(hour,daySi) {
-  if(hour===null||hour===''||hour===undefined) return {sky:'–',earth:'–',si:-1,ei:-1};
-  // hour = {h: 시, min: 분} 또는 숫자(하위호환)
-  let totalMin;
-  if(typeof hour === 'object' && hour !== null) {
-    totalMin = hour.h * 60 + (hour.min || 0);
-  } else {
-    totalMin = parseInt(hour) * 60;
-  }
-  // 각 시(時)는 23:30부터 시작 → 자시: 23:30~01:30, 축시: 01:30~03:30 ...
-  // totalMin을 23:30 기준으로 변환
-  const baseMin = 23 * 60 + 30; // 1410분
-  const adjusted = (totalMin - baseMin + 24*60) % (24*60);
-  const ei = Math.floor(adjusted / 120) % 12;
-  const base=[0,2,4,6,8][daySi%5], si=(base+ei)%10;
-  return {sky:SKY[si],earth:EARTH[ei],si,ei};
-}
-function calcDaewun(yp,mp,gender) {
-  const isYang=yp.si%2===0, fwd=(isYang&&gender==='male')||(!isYang&&gender==='female');
-  let ms=mp.si, me=mp.ei;
-  return Array.from({length:8},(_,i)=>{
-    ms=fwd?(ms+1)%10:(ms-1+10)%10;
-    me=fwd?(me+1)%12:(me-1+12)%12;
-    return {sky:SKY[ms],earth:EARTH[me],age:i*10+3};
-  });
-}
-function computeSaju(y,m,d,hour,gender) {
-  const yp=yearPillar(y,m,d),mp=monthPillar(y,m),dp=dayPillar(y,m,d),hp=hourPillar(hour,dp.si);
-  const pillars=[{name:'년주',...yp},{name:'월주',...mp},{name:'일주',...dp},{name:'시주',...hp}];
-  const cnt={'木':0,'火':0,'土':0,'金':0,'水':0};
-  pillars.forEach(p=>{
-    if(p.si>=0) cnt[SKY_ELEM[p.si]]++;
-    if(p.ei>=0) cnt[EARTH_ELEM[p.ei]]++;
-  });
-  return {pillars,cnt,dayElem:dp.si>=0?SKY_ELEM[dp.si]:'土',dw:calcDaewun(yp,mp,gender),zodiac:ZODIAC[yp.ei],yp,mp,dp};
-}
-
 // ── API 호출 (Netlify Function 경유) ──
 async function callClaude(prompt) {
   const res = await fetch("/.netlify/functions/claude", {

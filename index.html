@@ -147,8 +147,8 @@ function hourPillar(hour,daySi) {
   }
   // 각 시(時)는 23:30부터 시작 → 자시: 23:30~01:30, 축시: 01:30~03:30 ...
   // totalMin을 23:30 기준으로 변환
-  const base = 23 * 60 + 30; // 1410분
-  const adjusted = (totalMin - base + 24*60) % (24*60);
+  const baseMin = 23 * 60 + 30; // 1410분
+  const adjusted = (totalMin - baseMin + 24*60) % (24*60);
   const ei = Math.floor(adjusted / 120) % 12;
   const base=[0,2,4,6,8][daySi%5], si=(base+ei)%10;
   return {sky:SKY[si],earth:EARTH[ei],si,ei};

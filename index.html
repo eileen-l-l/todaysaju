@@ -232,35 +232,17 @@ const FItem = ({icon, label, text}) => (
 
 const Divider = () => <div style={s.divider}/>;
 
-// ── Google AdSense 광고 컴포넌트 ──
-// 배포 후 YOUR_ADSENSE_CLIENT, YOUR_AD_SLOT_ID 를 실제 값으로 교체하세요
-const ADSENSE_CLIENT = 'ca-pub-XXXXXXXXXXXXXXXX'; // ← 본인 AdSense 퍼블리셔 ID
-const AD_SLOT_INLINE = 'XXXXXXXXXX';              // ← 인라인 광고 슬롯 ID
-const AD_SLOT_BOTTOM = 'XXXXXXXXXX';              // ← 하단 고정 광고 슬롯 ID
-
-const AdBanner = ({ slot, style: extraStyle = {} }) => {
-  const ref = React.useRef(null);
-  React.useEffect(() => {
-    try {
-      if (ref.current && window.adsbygoogle) {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      }
-    } catch(e) {}
-  }, []);
-  return (
-    <div style={{textAlign:'center', overflow:'hidden', ...extraStyle}}>
-      <ins
-        ref={ref}
-        className="adsbygoogle"
-        style={{display:'block'}}
-        data-ad-client={ADSENSE_CLIENT}
-        data-ad-slot={slot}
-        data-ad-format="auto"
-        data-full-width-responsive="true"
-      />
-    </div>
-  );
-};
+// ── 카카오 애드핏 광고 컴포넌트 ──
+const AdBannerInline = () => (
+  <div style={{textAlign:'center', overflow:'hidden', margin:'16px 0'}}>
+    <ins className="kakao_ad_area"
+      style={{display:'none'}}
+      data-ad-unit="DAN-twbR0i8rVbgt6zIC"
+      data-ad-width="320"
+      data-ad-height="100"
+    ></ins>
+  </div>
+);
 
 // 하단 고정 광고 배너
 const BottomAdBar = () => (
@@ -268,10 +250,17 @@ const BottomAdBar = () => (
     position:'fixed', bottom:0, left:0, right:0, zIndex:999,
     background:C.surface, borderTop:`1px solid ${C.border}`,
     padding:'6px 0', textAlign:'center',
-    height:70,  // 고정 높이로 본문 패딩 계산 기준 확보
+    height:70,
   }}>
     <div style={{fontSize:9,color:C.textDim,letterSpacing:'0.1em',marginBottom:3}}>광고</div>
-    <AdBanner slot={AD_SLOT_BOTTOM} style={{maxWidth:680,margin:'0 auto'}}/>
+    <div style={{maxWidth:680,margin:'0 auto'}}>
+      <ins className="kakao_ad_area"
+        style={{display:'none'}}
+        data-ad-unit="DAN-j2dr4YDJCWmUYUmx"
+        data-ad-width="320"
+        data-ad-height="50"
+      ></ins>
+    </div>
   </div>
 );
 const NumInput = ({id, ph}) => (
@@ -499,7 +488,7 @@ const SajuResult = ({result, onReset}) => {
       {/* ── 인라인 광고 (결과 하단) ── */}
       <div style={{marginBottom:14}}>
         <div style={{fontSize:9,color:C.textDim,letterSpacing:'0.1em',marginBottom:4,textAlign:'center'}}>광고</div>
-        <AdBanner slot={AD_SLOT_INLINE}/>
+        <AdBannerInline/>
       </div>
 
       <button style={{...s.mainBtn,background:'transparent',border:`1px solid ${C.border}`,color:C.textMuted,marginBottom:80}} onClick={onReset}>다시 분석하기</button>
@@ -868,16 +857,6 @@ function App() {
   const [showPrivacy,setShowPrivacy]=useState(false);
   const [showTerms,setShowTerms]=useState(false);
 
-  useEffect(() => {
-    if (!document.querySelector('script[src*="adsbygoogle"]')) {
-      const sc = document.createElement('script');
-      sc.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
-      sc.async = true;
-      sc.crossOrigin = 'anonymous';
-      document.head.appendChild(sc);
-    }
-  }, []);
-
   return (
     <div style={{background:'#0c0c0f',minHeight:'100vh'}}>
       <style>{`
@@ -974,5 +953,6 @@ function App() {
 
     ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
   </script>
+  <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js" async></script>
 </body>
 </html>

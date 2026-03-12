@@ -4,6 +4,11 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
   }
 
+  // API 키 확인
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return { statusCode: 500, body: JSON.stringify({ error: "ANTHROPIC_API_KEY 환경변수가 설정되지 않았습니다. Netlify 대시보드 > Site settings > Environment variables에서 설정해주세요." }) };
+  }
+
   try {
     const { prompt } = JSON.parse(event.body);
 
@@ -11,7 +16,7 @@ exports.handler = async (event) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,  // Netlify 환경변수에서 읽음
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
@@ -23,8 +28,9 @@ exports.handler = async (event) => {
 
     const data = await res.json();
 
-    if (data.error) {
-      return { statusCode: 500, body: JSON.stringify({ error: data.error.message }) };
+    if (!res.ok || data.error) {
+      const msg = data.error?.message || `API 오류 (${res.status})`;
+      return { statusCode: res.status || 500, body: JSON.stringify({ error: msg }) };
     }
 
     const raw = data.content.map(b => b.text || "").join("");

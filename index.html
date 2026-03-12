@@ -138,7 +138,18 @@ function dayPillar(y,m,d) {
 }
 function hourPillar(hour,daySi) {
   if(hour===null||hour===''||hour===undefined) return {sky:'–',earth:'–',si:-1,ei:-1};
-  const h=parseInt(hour), ei=Math.floor(((h+1)%24)/2);
+  // hour = {h: 시, min: 분} 또는 숫자(하위호환)
+  let totalMin;
+  if(typeof hour === 'object' && hour !== null) {
+    totalMin = hour.h * 60 + (hour.min || 0);
+  } else {
+    totalMin = parseInt(hour) * 60;
+  }
+  // 각 시(時)는 23:30부터 시작 → 자시: 23:30~01:30, 축시: 01:30~03:30 ...
+  // totalMin을 23:30 기준으로 변환
+  const base = 23 * 60 + 30; // 1410분
+  const adjusted = (totalMin - base + 24*60) % (24*60);
+  const ei = Math.floor(adjusted / 120) % 12;
   const base=[0,2,4,6,8][daySi%5], si=(base+ei)%10;
   return {sky:SKY[si],earth:EARTH[ei],si,ei};
 }
@@ -314,7 +325,8 @@ const SajuForm = ({onResult}) => {
     const m = parseInt(document.getElementById('s-month')?.value||'');
     const d = parseInt(document.getElementById('s-day')?.value||'');
     const hourVal = document.getElementById('s-hour')?.value?.trim();
-    const hour = hourVal ? parseInt(hourVal) : null;
+    const minVal = document.getElementById('s-min')?.value?.trim();
+    const hour = hourVal ? {h: parseInt(hourVal), min: minVal ? parseInt(minVal) : 0} : null;
     const nm = document.getElementById('s-name')?.value?.trim() || '의뢰인';
 
     if(!y||!m||!d||m<1||m>12||d<1||d>31){setErr('년, 월, 일을 올바르게 입력해주세요.');return;}
@@ -330,7 +342,7 @@ const SajuForm = ({onResult}) => {
 중요: 응답은 반드시 한글로만 작성하세요. 한자는 사주팔자 기둥(甲子 등)을 제외하고 절대 사용하지 마세요. 전문용어도 쉬운 한글로 풀어서 설명해주세요.
 톤 지침: 전체적으로 따뜻하고 희망적인 톤을 유지하세요. 부정적인 면도 성장의 기회로 긍정적으로 표현하세요. 사용자가 읽고 힘을 얻을 수 있도록 작성하세요.
 
-【의뢰인】 ${nm} (${gTxt}) · ${y}년 ${m}월 ${d}일${hour!==null?' '+hour+'시':''}
+【의뢰인】 ${nm} (${gTxt}) · ${y}년 ${m}월 ${d}일${hour!==null?' '+(typeof hour==='object'?hour.h+'시'+(hour.min?hour.min+'분':''):hour+'시'):''}
 【사주팔자】 년주:${yp.sky}${yp.earth} / 월주:${mp.sky}${mp.earth} / 일주:${dp.sky}${dp.earth} / 시주:${hour!==null?hp.sky+hp.earth:'미상'}
 일간: ${dp.sky}(${SKY_KO[dp.si]}일간) · 오행분포: ${elemTxt} · 대운: ${dwTxt} · 띠: ${sj.zodiac}띠
 
@@ -370,7 +382,7 @@ const SajuForm = ({onResult}) => {
         <div style={s.formGroup}><label style={s.label}>일 (1–31)</label><NumInput id="s-day" ph="일"/></div>
       </div>
       <div style={s.formRow2}>
-        <div style={s.formGroup}><label style={s.label}>시간 (0–23, 비워도 됩니다)</label><NumInput id="s-hour" ph="시"/></div>
+        <div style={s.formGroup}><label style={s.label}>시간 (비워도 됩니다)</label><div style={{display:'flex',gap:8}}><NumInput id="s-hour" ph="시 (0–23)"/><NumInput id="s-min" ph="분 (0–59)"/></div></div>
         <div style={s.formGroup}><label style={s.label}>이름 (선택)</label>
           <input id="s-name" type="text" placeholder="홍길동" style={s.input}
             onFocus={e=>e.target.style.borderColor=C.primary}

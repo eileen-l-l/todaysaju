@@ -455,30 +455,7 @@ const SajuResult = ({result, onReset}) => {
         ))}
       </div>
 
-      {/* ── 행운 정보 ── */}
-      <div style={s.card}>
-        <div style={s.cardLabel}>행운 정보</div>
-        <FItem icon="🎨" label="행운의 색" text={d.lucky_color}/>
-        <FItem icon="🔢" label="행운의 숫자" text={d.lucky_number}/>
-        <FItem icon="🧭" label="행운의 방향" text={d.lucky_direction}/>
-        <Divider/>
-        <div style={s.compatGrid}>
-          <div style={{padding:14,borderRadius:10,background:'rgba(109,186,138,0.07)',border:'1px solid rgba(109,186,138,0.18)'}}>
-            <div style={{fontSize:10,letterSpacing:'0.2em',marginBottom:7,fontWeight:600,color:'#6dba8a'}}>잘 맞는 띠</div>
-            <div style={{fontSize:13,lineHeight:1.8,fontWeight:300,wordBreak:'keep-all'}}>{d.compat_best}</div>
-          </div>
-          <div style={{padding:14,borderRadius:10,background:'rgba(196,91,74,0.07)',border:'1px solid rgba(196,91,74,0.18)'}}>
-            <div style={{fontSize:10,letterSpacing:'0.2em',marginBottom:7,fontWeight:600,color:'#e07a65'}}>주의할 띠</div>
-            <div style={{fontSize:13,lineHeight:1.8,fontWeight:300,wordBreak:'keep-all'}}>{d.compat_avoid}</div>
-          </div>
-        </div>
-      </div>
 
-      {/* ── 종합 총평 ── */}
-      <div style={s.card}>
-        <div style={s.secHead}><div style={s.secDot}/><div style={s.secTitle}>종합 총평</div></div>
-        <p style={s.bodyText}>{d.summary}</p>
-      </div>
 
       {/* ── 인라인 광고 (결과 하단) ── */}
       <div style={{marginBottom:14}}>

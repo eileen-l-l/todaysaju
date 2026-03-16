@@ -307,23 +307,23 @@ const SajuForm = ({onResult}) => {
 
 다음 JSON으로만 응답하세요:
 {
-  "destiny_line": "이 사람의 운명을 단 한 문장으로 — 극적이고 시적으로, 마치 소설 첫 줄처럼",
+  "destiny_line": "이 사람의 운명을 단 한 문장으로 — 극적이고 시적으로",
   "keywords": ["핵심 키워드 3개, 각 2~4글자"],
-  "today_word": "오늘 이 사람에게 전하는 짧고 강렬한 한 마디, 15자 이내",
-  "personality": "성격·기질 심층분석 7~9문장",
-  "talent": "재능·직업적성 5~6문장",
-  "wealth": "재물운 5~6문장",
-  "love": "애정·결혼운 6~7문장",
-  "health": "건강운 4~5문장",
-  "daewun": "대운 흐름 5~6문장",
-  "caution": "주의사항 4~5문장",
-  "yongshin": "이 사주에 필요한 에너지를 쉬운 말로 4~5문장",
-  "lucky_color": "행운색 2~3가지와 이유",
-  "lucky_number": "행운숫자 2~3가지와 이유",
+  "today_word": "오늘 이 사람에게 전하는 한 마디, 15자 이내",
+  "personality": "성격·기질 분석 4~5문장",
+  "talent": "재능·직업적성 3~4문장",
+  "wealth": "재물운 3~4문장",
+  "love": "애정·결혼운 3~4문장",
+  "health": "건강운 2~3문장",
+  "daewun": "대운 흐름 3~4문장",
+  "caution": "주의사항 2~3문장",
+  "yongshin": "이 사주에 필요한 에너지 2~3문장",
+  "lucky_color": "행운색 2가지와 이유",
+  "lucky_number": "행운숫자 2가지와 이유",
   "lucky_direction": "행운방향과 이유",
-  "compat_best": "잘맞는 띠 2~3가지와 이유",
-  "compat_avoid": "주의할 띠 2가지와 이유",
-  "summary": "종합총평 6~8문장"
+  "compat_best": "잘맞는 띠 2가지와 이유",
+  "compat_avoid": "주의할 띠 1~2가지와 이유",
+  "summary": "종합총평 3~4문장"
 }`);
       onResult({saju:sj, data, year:y, month:m, day:d, hour, gender, name:nm});
     } catch(e){ setErr(e.message); }
